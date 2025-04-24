@@ -9,8 +9,8 @@ from schema_config import SCHEMA_CONTEXT
 
 
 load_dotenv()
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"]) # type: ignore
-print("[DEBUG] Loaded API Key:", os.getenv("OPENAI_API_KEY"))
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"]) 
+
 
 
 SYSTEM_PROMPT = "You are a helpful assistant that translates natural language questions into SQL queries."
