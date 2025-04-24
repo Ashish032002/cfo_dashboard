@@ -6,6 +6,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from sql_corrector import correct_sql_with_openai
 from schema_config import SCHEMA_CONTEXT
+import streamlit as st 
 
 
 load_dotenv()
