@@ -1,0 +1,196 @@
+package com.cams.day4;
+
+import com.cams.day4.bean.Employee;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.*;
+
+public class CrudDemo {
+
+    private static final List<Employee> employees = new ArrayList<>();
+    private static final Scanner input = new Scanner(System.in);
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    public static void main(String[] args) {
+        seedEmployees();  // Prepopulate sample employees
+        int choice;
+
+        do {
+            printMenu();
+            System.out.print("Enter your choice [1-7]: ");
+            while (!input.hasNextInt()) {
+                System.out.print("Invalid input. Please enter a number [1-7]: ");
+                input.next();
+            }
+
+            choice = input.nextInt();
+            input.nextLine(); // Consume newline
+
+            switch (choice) {
+                case 1 -> addEmployee(readEmployeeFromConsole(true));
+                case 2 -> viewEmployees(employees);
+                case 3 -> {
+                    System.out.print("Enter ID to delete: ");
+                    deleteById(input.nextInt());
+                }
+                case 4 -> {
+                    System.out.print("Enter ID to view: ");
+                    viewEmployeeById(input.nextInt());
+                }
+                case 5 -> {
+                    System.out.print("Enter ID to update: ");
+                    int idToUpdate = input.nextInt();
+                    input.nextLine(); // Consume newline
+                    updateById(idToUpdate, readEmployeeFromConsole(false));
+                }
+                case 6 -> viewActiveEmployees(employees);
+                case 7 -> System.out.println("Exiting...");
+                default -> System.out.println("Invalid choice. Try again.");
+            }
+
+        } while (choice != 7);
+
+        input.close();
+    }
+
+    private static void seedEmployees() {
+        employees.add(new Employee(100, "abc", "abc@gmail.com", 9878675676L, true, LocalDate.of(2007, 8, 17)));
+        employees.add(new Employee(101, "xyz", "xyz@gmail.com", 8798675687L, true, LocalDate.of(2003, 3, 10)));
+        employees.add(new Employee(102, "mno", "mno@gmail.com", 7898563416L, false, LocalDate.of(2009, 4, 8)));
+        employees.add(new Employee(103, "pqr", "pqr@gmail.com", 6898785645L, true, LocalDate.of(2006, 6, 21)));
+        employees.add(new Employee(104, "lmn", "lmn@gmail.com", 8754231243L, false, LocalDate.of(2008, 9, 15)));
+    }
+
+    private static void printMenu() {
+        System.out.println("\n======== Employee Management Menu ========");
+        System.out.println("1. Add Employee");
+        System.out.println("2. View All Employees");
+        System.out.println("3. Delete Employee by ID");
+        System.out.println("4. View Employee by ID");
+        System.out.println("5. Update Employee by ID");
+        System.out.println("6. View Active Employees");
+        System.out.println("7. Exit");
+        System.out.println("==========================================");
+    }
+
+    private static Employee readEmployeeFromConsole(boolean askId) {
+        Employee employee = new Employee();
+
+        try {
+            if (askId) {
+                System.out.print("Enter Employee ID: ");
+                employee.setId(input.nextInt());
+                input.nextLine(); // consume newline
+            }
+
+            System.out.print("Enter Name: ");
+            employee.setName(input.nextLine());
+
+            System.out.print("Enter Email: ");
+            employee.setEmail(input.nextLine());
+
+            System.out.print("Enter Mobile Number: ");
+            employee.setMobile(input.nextLong());
+
+            System.out.print("Is Active [0/1]: ");
+            employee.setActive(input.nextInt() == 1);
+            input.nextLine(); // consume newline
+
+            System.out.print("Enter Birth Date [yyyy-MM-dd]: ");
+            employee.setBirthDate(readDate());
+
+        } catch (InputMismatchException e) {
+            System.out.println("Invalid input. Please try again.");
+            input.nextLine(); // flush
+            return readEmployeeFromConsole(askId);
+        }
+
+        return employee;
+    }
+
+    private static LocalDate readDate() {
+        while (true) {
+            try {
+                return LocalDate.parse(input.nextLine(), FORMATTER);
+            } catch (DateTimeParseException e) {
+                System.out.print("Invalid format. Please enter again (yyyy-MM-dd): ");
+            }
+        }
+    }
+
+    private static void addEmployee(Employee emp) {
+        if (employees.stream().anyMatch(e -> e.getId() == emp.getId())) {
+            System.out.println("Employee with ID " + emp.getId() + " already exists.");
+        } else {
+            employees.add(emp);
+            System.out.println("Employee added successfully.");
+        }
+    }
+
+    private static void deleteById(int id) {
+        Employee toDelete = employees.stream().filter(e -> e.getId() == id).findFirst().orElse(null);
+        if (toDelete != null) {
+            employees.remove(toDelete);
+            System.out.println("Deleted employee with ID: " + id);
+        } else {
+            System.out.println("No employee found with ID: " + id);
+        }
+    }
+
+    private static void updateById(int id, Employee updated) {
+        for (int i = 0; i < employees.size(); i++) {
+            if (employees.get(i).getId() == id) {
+                updated.setId(id); // Preserve ID
+                employees.set(i, updated);
+                System.out.println("Employee updated successfully.");
+                return;
+            }
+        }
+        System.out.println("No employee found with ID: " + id);
+    }
+
+    private static void viewEmployeeById(int id) {
+        Employee emp = employees.stream().filter(e -> e.getId() == id).findFirst().orElse(null);
+        if (emp != null) {
+            printHeader();
+            printEmployee(emp);
+        } else {
+            System.out.println("No employee found with ID: " + id);
+        }
+    }
+
+    private static void viewEmployees(List<Employee> list) {
+        if (list.isEmpty()) {
+            System.out.println("No employees to display.");
+            return;
+        }
+
+        printHeader();
+        list.forEach(CrudDemo::printEmployee);
+    }
+
+    private static void viewActiveEmployees(List<Employee> list) {
+        List<Employee> activeEmployees = list.stream().filter(Employee::isActive).toList();
+        if (activeEmployees.isEmpty()) {
+            System.out.println("No active employees found.");
+            return;
+        }
+
+        printHeader();
+        activeEmployees.forEach(CrudDemo::printEmployee);
+    }
+
+    private static void printHeader() {
+        System.out.printf("%-5s %-10s %-25s %-15s %-12s %-12s%n",
+                "ID", "Name", "Email", "Mobile", "Active", "BirthDate");
+        System.out.println("----------------------------------------------------------------------------");
+    }
+
+    private static void printEmployee(Employee emp) {
+        System.out.printf("%-5d %-10s %-25s %-15d %-12s %-12s%n",
+                emp.getId(), emp.getName(), emp.getEmail(), emp.getMobile(),
+                emp.isActive() ? "Yes" : "No", emp.getBirthDate());
+    }
+}
