@@ -1,22 +1,34 @@
 <build>
   <plugins>
     <plugin>
-      <groupId>org.springdoc</groupId>
-      <artifactId>springdoc-openapi-maven-plugin</artifactId>
-      <version>1.6.15</version>
+      <groupId>org.openapitools</groupId>
+      <artifactId>openapi-generator-maven-plugin</artifactId>
+      <version>7.4.0</version>
       <executions>
         <execution>
-          <phase>verify</phase>
+          <id>generate-openapi</id>
           <goals>
             <goal>generate</goal>
           </goals>
+          <configuration>
+            <!-- Path to your OpenAPI spec (can be YAML or JSON) -->
+            <inputSpec>${project.basedir}/src/main/resources/openapi.yaml</inputSpec>
+            
+            <!-- Choose what to generate -->
+            <generatorName>spring</generatorName>  <!-- or java, kotlin, typescript-axios, etc. -->
+
+            <!-- Where generated code should go -->
+            <output>${project.build.directory}/generated-sources/openapi</output>
+
+            <!-- Extra configs for Spring Boot server stub -->
+            <configOptions>
+              <interfaceOnly>true</interfaceOnly>
+              <skipDefaultInterface>true</skipDefaultInterface>
+              <useTags>true</useTags>
+            </configOptions>
+          </configuration>
         </execution>
       </executions>
-      <configuration>
-        <apiDocsUrl>http://localhost:9090/v3/api-docs.yaml</apiDocsUrl>
-        <outputFileName>openapi.yaml</outputFileName>
-        <outputDir>${project.build.directory}</outputDir>
-      </configuration>
     </plugin>
   </plugins>
 </build>
