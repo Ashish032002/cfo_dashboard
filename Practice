@@ -1,114 +1,22 @@
-package com.example.demo.service;
-
-import com.example.demo.entity.UserEntity;
-import com.example.demo.repository.UserRepository;
-import com.example.demo.dto.User;
-import com.example.demo.functional.Transformer;
-import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
-@Service
-public class UserService {
-
-    private final UserRepository userRepository;
-
-    // Mapper: Entity -> DTO
-    private final Transformer<UserEntity, User> entityToDto = ue ->
-            new User(ue.getId(), ue.getName(), ue.getEmail());
-
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
-    // 🔹 Get all users
-    public Flux<User> getAllUsers() {
-        return userRepository.findAll()
-                .map(entityToDto::transform);
-    }
-
-    // 🔹 Get user by ID
-    public Mono<User> getUserById(Long id) {
-        return userRepository.findById(id)
-                .map(entityToDto::transform);
-    }
-
-    // 🔹 Create a new user (id is auto-generated)
-    public Mono<User> createUser(Mono<User> userMono) {
-        return userMono
-                .map(user -> {
-                    UserEntity entity = new UserEntity();
-                    // 🚫 do not set id, let DB generate it
-                    entity.setName(user.getName());
-                    entity.setEmail(user.getEmail());
-                    return entity;
-                })
-                .flatMap(userRepository::save)
-                .map(entityToDto::transform);
-    }
-
-    // 🔹 Update existing user
-    public Mono<User> updateUser(Long id, Mono<User> userMono) {
-        return userRepository.findById(id)
-                .flatMap(existingEntity ->
-                        userMono.map(u -> {
-                            existingEntity.setName(u.getName());
-                            existingEntity.setEmail(u.getEmail());
-                            return existingEntity;
-                        })
-                )
-                .flatMap(userRepository::save)
-                .map(entityToDto::transform);
-    }
-
-    // 🔹 Delete user by ID
-    public Mono<Void> deleteUser(Long id) {
-        return userRepository.deleteById(id);
-    }
-}
-
-
-2
-@RestController
-@RequestMapping("/api/users")
-public class UserController {
-
-    private final UserService userService;
-
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
-
-    @GetMapping
-    public Flux<User> getAllUsers() {
-        return userService.getAllUsers();
-    }
-
-    @GetMapping("/{id}")
-    public Mono<ResponseEntity<User>> getUserById(@PathVariable Long id) {
-        return userService.getUserById(id)
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
-    }
-
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Mono<User> createUser(@RequestBody Mono<User> userMono) {
-        return userService.createUser(userMono);
-    }
-
-    @PutMapping("/{id}")
-    public Mono<ResponseEntity<User>> updateUser(
-            @PathVariable Long id,
-            @RequestBody Mono<User> userMono) {
-        return userService.updateUser(id, userMono)
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
-    }
-
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public Mono<Void> deleteUser(@PathVariable Long id) {
-        return userService.deleteUser(id);
-    }
-}
+<build>
+  <plugins>
+    <plugin>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-maven-plugin</artifactId>
+      <version>1.6.15</version>
+      <executions>
+        <execution>
+          <phase>verify</phase>
+          <goals>
+            <goal>generate</goal>
+          </goals>
+        </execution>
+      </executions>
+      <configuration>
+        <apiDocsUrl>http://localhost:9090/v3/api-docs.yaml</apiDocsUrl>
+        <outputFileName>openapi.yaml</outputFileName>
+        <outputDir>${project.build.directory}</outputDir>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
