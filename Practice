@@ -1,43 +1,45 @@
 <dependencies>
-  <!-- Spring Boot Starter WebFlux (Reactive + Reactor Mono/Flux + validation) -->
-  <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-webflux</artifactId>
-  </dependency>
+    <!-- Spring Boot WebFlux -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-webflux</artifactId>
+    </dependency>
 
-  <!-- Jackson for JSON annotations (@JsonProperty, etc.) -->
-  <dependency>
-    <groupId>com.fasterxml.jackson.core</groupId>
-    <artifactId>jackson-databind</artifactId>
-  </dependency>
-  <dependency>
-    <groupId>com.fasterxml.jackson.core</groupId>
-    <artifactId>jackson-annotations</artifactId>
-  </dependency>
+    <!-- Jackson -->
+    <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-annotations</artifactId>
+    </dependency>
 
-  <!-- Jakarta validation annotations (@NotNull, @Valid, etc.) -->
-  <dependency>
-    <groupId>jakarta.validation</groupId>
-    <artifactId>jakarta.validation-api</artifactId>
-  </dependency>
+    <!-- Jakarta Validation -->
+    <dependency>
+        <groupId>jakarta.validation</groupId>
+        <artifactId>jakarta.validation-api</artifactId>
+        <version>3.0.2</version>
+    </dependency>
 
-  <!-- Jakarta annotations (@Generated, etc.) -->
-  <dependency>
-    <groupId>jakarta.annotation</groupId>
-    <artifactId>jakarta.annotation-api</artifactId>
-  </dependency>
+    <!-- Jakarta Annotations -->
+    <dependency>
+        <groupId>jakarta.annotation</groupId>
+        <artifactId>jakarta.annotation-api</artifactId>
+        <version>2.1.1</version>
+    </dependency>
 
-  <!-- Swagger OpenAPI Annotations -->
-  <dependency>
-    <groupId>io.swagger.core.v3</groupId>
-    <artifactId>swagger-annotations</artifactId>
-    <version>2.2.22</version> <!-- latest stable -->
-  </dependency>
+    <!-- Swagger / OpenAPI Annotations -->
+    <dependency>
+        <groupId>io.swagger.core.v3</groupId>
+        <artifactId>swagger-annotations</artifactId>
+        <version>2.2.15</version>
+    </dependency>
 
-  <!-- OpenAPI nullable (for org.openapitools.jackson.nullable) -->
-  <dependency>
-    <groupId>org.openapitools</groupId>
-    <artifactId>jackson-databind-nullable</artifactId>
-    <version>0.2.6</version>
-  </dependency>
+    <!-- For handling nullable fields -->
+    <dependency>
+        <groupId>org.openapitools</groupId>
+        <artifactId>jackson-databind-nullable</artifactId>
+        <version>0.2.6</version>
+    </dependency>
 </dependencies>
