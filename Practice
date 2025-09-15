@@ -1,36 +1,42 @@
-<dependencies>
-  <!-- Jakarta Validation API (replacement for javax.validation) -->
-  <dependency>
-    <groupId>jakarta.validation</groupId>
-    <artifactId>jakarta.validation-api</artifactId>
-    <version>3.0.2</version>
-  </dependency>
-
-  <!-- Jakarta Annotations -->
-  <dependency>
-    <groupId>jakarta.annotation</groupId>
-    <artifactId>jakarta.annotation-api</artifactId>
-    <version>2.1.1</version>
-  </dependency>
-
-  <!-- Jackson Nullable (needed for generated User model) -->
-  <dependency>
-    <groupId>org.openapitools</groupId>
-    <artifactId>jackson-databind-nullable</artifactId>
-    <version>0.2.6</version>
-  </dependency>
-</dependencies>
-
-
-
-
-
-
-next
-
-<configOptions>
-  <useSpringBoot3>true</useSpringBoot3>
-  <interfaceOnly>true</interfaceOnly>
-  <skipDefaultInterface>true</skipDefaultInterface>
-  <useJakartaEe>true</useJakartaEe>
-</configOptions>
+[ERROR] COMPILATION ERROR :
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/Users/ashish.singh/Downloads/demo-microservice/demo-microservice/demo-microservice/demo-rest-api/target/generated-sources/openapi/src/main/java/org/openapitools/api/ApiUtil.java:[5,28] package jakarta.servlet.http does not exist
+[ERROR] /C:/Users/ashish.singh/Downloads/demo-microservice/demo-microservice/demo-microservice/demo-rest-api/target/generated-sources/openapi/src/main/java/org/openapitools/api/ApiUtil.java:[11,13] cannot find symbol
+  symbol:   class HttpServletResponse
+  location: class org.openapitools.api.ApiUtil
+[ERROR] /C:/Users/ashish.singh/Downloads/demo-microservice/demo-microservice/demo-microservice/demo-rest-api/target/generated-sources/openapi/src/main/java/org/openapitools/api/ApiUtil.java:[11,61] cannot find symbol
+  symbol:   class HttpServletResponse
+  location: class org.openapitools.api.ApiUtil
+[INFO] 3 errors
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for demo-microservice 1.0-SNAPSHOT:
+[INFO]
+[INFO] demo-microservice .................................. SUCCESS [  0.484 s]
+[INFO] demo-common ........................................ SUCCESS [  4.043 s]
+[INFO] demo-rest-api ...................................... FAILURE [  4.581 s]
+[INFO] demo-grpc-gateway .................................. SKIPPED
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  9.640 s
+[INFO] Finished at: 2025-09-15T16:21:35+05:30
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.11.0:compile (default-compile) on project demo-rest-api: Compilation failure: Compilation failure:
+[ERROR] /C:/Users/ashish.singh/Downloads/demo-microservice/demo-microservice/demo-microservice/demo-rest-api/target/generated-sources/openapi/src/main/java/org/openapitools/api/ApiUtil.java:[5,28] package jakarta.servlet.http does not exist
+[ERROR] /C:/Users/ashish.singh/Downloads/demo-microservice/demo-microservice/demo-microservice/demo-rest-api/target/generated-sources/openapi/src/main/java/org/openapitools/api/ApiUtil.java:[11,13] cannot find symbol
+[ERROR]   symbol:   class HttpServletResponse
+[ERROR]   location: class org.openapitools.api.ApiUtil
+[ERROR] /C:/Users/ashish.singh/Downloads/demo-microservice/demo-microservice/demo-microservice/demo-rest-api/target/generated-sources/openapi/src/main/java/org/openapitools/api/ApiUtil.java:[11,61] cannot find symbol
+[ERROR]   symbol:   class HttpServletResponse
+[ERROR]   location: class org.openapitools.api.ApiUtil
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+[ERROR]
+[ERROR] After correcting the problems, you can resume the build with the command
+[ERROR]   mvn <args> -rf :demo-rest-api
