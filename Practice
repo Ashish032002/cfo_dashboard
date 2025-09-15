@@ -1,34 +1,19 @@
-<build>
-  <plugins>
-    <plugin>
-      <groupId>org.openapitools</groupId>
-      <artifactId>openapi-generator-maven-plugin</artifactId>
-      <version>7.4.0</version>
-      <executions>
-        <execution>
-          <id>generate-openapi</id>
-          <goals>
-            <goal>generate</goal>
-          </goals>
-          <configuration>
-            <!-- Path to your OpenAPI spec (can be YAML or JSON) -->
-            <inputSpec>${project.basedir}/src/main/resources/openapi.yaml</inputSpec>
-            
-            <!-- Choose what to generate -->
-            <generatorName>spring</generatorName>  <!-- or java, kotlin, typescript-axios, etc. -->
+ashish.singh@CAMSARC247 MINGW64 ~/Downloads/demo-microservice/demo-microservice
+$ cd "C:\Users\ashish.singh\Downloads\demo-microservice\demo-microservice\demo-microservice\demo-rest-api"
 
-            <!-- Where generated code should go -->
-            <output>${project.build.directory}/generated-sources/openapi</output>
-
-            <!-- Extra configs for Spring Boot server stub -->
-            <configOptions>
-              <interfaceOnly>true</interfaceOnly>
-              <skipDefaultInterface>true</skipDefaultInterface>
-              <useTags>true</useTags>
-            </configOptions>
-          </configuration>
-        </execution>
-      </executions>
-    </plugin>
-  </plugins>
-</build>
+ashish.singh@CAMSARC247 MINGW64 ~/Downloads/demo-microservice/demo-microservice/demo-microservice/demo-rest-api
+$ mvn clean install
+[INFO] Scanning for projects...
+[ERROR] [ERROR] Some problems were encountered while processing the POMs:
+[FATAL] 'dependencies.dependency.[com.example.demo:demo-rest-api:1.0-SNAPSHOT]' for com.example.demo:demo-rest-api:1.0-SNAPSHOT is referencing itself. @ line 96, column 21
+ @
+[ERROR] The build could not read 1 project -> [Help 1]
+[ERROR]
+[ERROR]   The project com.example.demo:demo-rest-api:1.0-SNAPSHOT (C:\Users\ashish.singh\Downloads\demo-microservice\demo-microservice\demo-microservice\demo-rest-api\pom.xml) has 1 error
+[ERROR]     'dependencies.dependency.[com.example.demo:demo-rest-api:1.0-SNAPSHOT]' for com.example.demo:demo-rest-api:1.0-SNAPSHOT is referencing itself. @ line 96, column 21
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/ProjectBuildingException
