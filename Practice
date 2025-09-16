@@ -1,10 +1,8 @@
-package com.example.demo.security;
+package com.example.demo.filter;
 
 import com.example.demo.service.JwtService;
-import io.jsonwebtoken.Claims;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
@@ -12,6 +10,7 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Locale;
 
 @Component
 public class JwtAuthFilter implements WebFilter {
@@ -22,44 +21,64 @@ public class JwtAuthFilter implements WebFilter {
         this.jwtService = jwtService;
     }
 
+    // Endpoints that should NOT require a token
     private static final List<String> WHITELIST = List.of(
-            "/auth/login",
-            "/swagger-ui",
-            "/swagger-ui.html",
-            "/swagger-ui/",
-            "/swagger-ui/index.html",
-            "/v3/api-docs",
-            "/v3/api-docs/"
+        "/auth/login",
+        "/swagger-ui",            // covers /swagger-ui and /swagger-ui/index.html
+        "/swagger-ui.html",
+        "/v3/api-docs",           // covers /v3/api-docs and /v3/api-docs/*
+        "/webjars",
+        "/actuator/health",
+        "/h2-console"             // if you are using H2 console
     );
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        ServerHttpRequest request = exchange.getRequest();
-        String path = request.getPath().toString();
+        final String path = exchange.getRequest().getPath().value();
 
-        // Allow whitelisted endpoints without JWT
-        if (WHITELIST.stream().anyMatch(path::startsWith)) {
-            return chain.filter(exchange);
+        // Allow whitelisted paths without auth
+        for (String open : WHITELIST) {
+            if (path.startsWith(open)) {
+                return chain.filter(exchange);
+            }
         }
 
-        // Extract token
-        String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return exchange.getResponse().setComplete();
+        // Require Authorization: Bearer <token>
+        String auth = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+        if (auth == null || !auth.toLowerCase(Locale.ROOT).startsWith("bearer ")) {
+            return unauthorized(exchange);
         }
 
-        String token = authHeader.substring(7);
+        String token = auth.substring(7).trim();
+        if (token.isEmpty()) {
+            return unauthorized(exchange);
+        }
 
         try {
-            Claims claims = jwtService.extractAllClaims(token);
-            // Optionally attach claims to request attributes for controllers
-            exchange.getAttributes().put("claims", claims);
-        } catch (Exception e) {
-            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-            return exchange.getResponse().setComplete();
-        }
+            // Validate the token using your existing JwtService
+            boolean valid = jwtService.validateToken(token); // <-- must exist in your JwtService
+            if (!valid) {
+                return unauthorized(exchange);
+            }
 
-        return chain.filter(exchange);
+            // If you ALSO have this method, attach username for downstream handlers (optional)
+            try {
+                String username = jwtService.getUsernameFromToken(token); // optional
+                if (username != null) {
+                    exchange.getAttributes().put("username", username);
+                }
+            } catch (Throwable ignored) {
+                // Safe to ignore if method not present or not implemented
+            }
+
+            return chain.filter(exchange);
+        } catch (Exception e) {
+            return unauthorized(exchange);
+        }
+    }
+
+    private Mono<Void> unauthorized(ServerWebExchange exchange) {
+        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+        return exchange.getResponse().setComplete();
     }
 }
