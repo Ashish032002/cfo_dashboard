@@ -1,7 +1,3 @@
-POST http://localhost:9090/auth/login
-Content-Type: application/json
-
-{
-  "username": "user",
-  "password": "pass"
-}
+curl -X POST http://localhost:9090/auth/login \
+-H "Content-Type: application/json" \
+-d '{"username":"user","password":"pass"}'
