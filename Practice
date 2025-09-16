@@ -1,73 +1,7 @@
-package com.example.demo.filter;
+POST http://localhost:9090/auth/login
+Content-Type: application/json
 
-import com.example.demo.service.JwtService;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
-import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.server.WebFilter;
-import org.springframework.web.server.WebFilterChain;
-import reactor.core.publisher.Mono;
-
-@Component
-public class JwtAuthFilter implements WebFilter {
-
-    private final JwtService jwtService;
-
-    public JwtAuthFilter(JwtService jwtService) {
-        this.jwtService = jwtService;
-    }
-
-    private static final String[] WHITELIST = {
-            "/swagger-ui.html",
-            "/swagger-ui",
-            "/swagger-ui/",
-            "/swagger-ui/index.html",
-            "/swagger-ui/**",
-            "/v3/api-docs",
-            "/v3/api-docs/**",
-            "/webjars/**",
-            "/api/public",
-            "/actuator/health"
-    };
-
-    @Override
-    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        final String path = exchange.getRequest().getPath().value();
-
-        // ✅ Allow whitelisted paths without auth
-        for (String open : WHITELIST) {
-            if (path.startsWith(open)) {
-                return chain.filter(exchange);
-            }
-        }
-
-        // ✅ Get Authorization header
-        final String auth = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-        if (auth == null || !auth.startsWith("Bearer ")) {
-            return unauthorized(exchange);
-        }
-
-        String token = auth.substring(7).trim();
-        if (token.isEmpty()) {
-            return unauthorized(exchange);
-        }
-
-        try {
-            // ✅ Use your JwtService.validateToken()
-            String username = jwtService.validateToken(token);
-            if (username == null) {
-                return unauthorized(exchange);
-            }
-            // Token valid → continue
-            return chain.filter(exchange);
-        } catch (Exception e) {
-            return unauthorized(exchange);
-        }
-    }
-
-    private Mono<Void> unauthorized(ServerWebExchange exchange) {
-        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-        return exchange.getResponse().setComplete();
-    }
+{
+  "username": "user",
+  "password": "pass"
 }
