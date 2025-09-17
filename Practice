@@ -252,3 +252,6 @@ public class GraphqlExceptionResolver extends DataFetcherExceptionResolverAdapte
         return Mono.empty();
     }
 }
+curl -X POST http://localhost:8081/graphql \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{ users { id name email } }"}'
