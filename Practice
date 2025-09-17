@@ -1,40 +1,186 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+package com.example.demo.graphql;
 
-  <parent>
-    <groupId>com.example.demo</groupId>
-    <artifactId>demo-microservice</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    <relativePath>../pom.xml</relativePath>
-  </parent>
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.reactive.function.client.WebClient;
 
-  <artifactId>demo-graphql</artifactId>
-  <packaging>jar</packaging>
+@SpringBootApplication
+public class GraphqlApplication {
 
-  <dependencies>
-    <!-- GraphQL server for Spring -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-graphql</artifactId>
-    </dependency>
-    <!-- Reactive client to call REST API -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-webflux</artifactId>
-    </dependency>
-    <!-- Validation (optional for inputs) -->
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-validation</artifactId>
-    </dependency>
-    <!-- Test utilities -->
-    <dependency>
-      <groupId>org.springframework.graphql</groupId>
-      <artifactId>spring-graphql-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-</project>
+    @Bean
+    public WebClient restApiClient() {
+        // Your REST API base URL
+        return WebClient.builder()
+                .baseUrl("http://localhost:8080/api") // adjust port if needed
+                .build();
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(GraphqlApplication.class, args);
+    }
+}
+
+server:
+  port: 8081   # run GraphQL on 8081 so REST can keep 8080
+spring:
+  graphql:
+    graphiql:
+      enabled: true   # enables a simple GraphiQL UI at /graphiql (Spring Boot 3.3+)
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+}
+
+input CreateUserInput {
+  name: String!
+  email: String!
+}
+
+type Query {
+  users: [User!]!
+  userById(id: ID!): User
+}
+
+type Mutation {
+  createUser(input: CreateUserInput!): User!
+  updateUser(id: ID!, input: CreateUserInput!): User!
+  deleteUser(id: ID!): Boolean!
+}
+
+package com.example.demo.graphql.model;
+
+public class User {
+    private Long id;
+    private String name;
+    private String email;
+
+    public User() {}
+    public User(Long id, String name, String email) {
+        this.id = id; this.name = name; this.email = email;
+    }
+    public Long getId()      { return id; }
+    public String getName()  { return name; }
+    public String getEmail() { return email; }
+    public void setId(Long id)         { this.id = id; }
+    public void setName(String name)   { this.name = name; }
+    public void setEmail(String email) { this.email = email; }
+}
+
+
+package com.example.demo.graphql.model;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+
+public class CreateUserInput {
+    @NotBlank
+    private String name;
+    @NotBlank @Email
+    private String email;
+
+    public CreateUserInput() {}
+    public CreateUserInput(String name, String email) { this.name = name; this.email = email; }
+    public String getName() { return name; }
+    public String getEmail() { return email; }
+    public void setName(String name) { this.name = name; }
+    public void setEmail(String email) { this.email = email; }
+}
+
+package com.example.demo.graphql;
+
+import com.example.demo.graphql.model.CreateUserInput;
+import com.example.demo.graphql.model.User;
+import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+@Controller
+public class UserGraphqlController {
+
+    private final WebClient restApiClient;
+    public UserGraphqlController(WebClient restApiClient) {
+        this.restApiClient = restApiClient;
+    }
+
+    @QueryMapping
+    public Flux<User> users() {
+        return restApiClient.get()
+                .uri("/users")
+                .retrieve()
+                .bodyToFlux(User.class);
+    }
+
+    @QueryMapping
+    public Mono<User> userById(@Argument Long id) {
+        return restApiClient.get()
+                .uri("/users/{id}", id)
+                .retrieve()
+                .bodyToMono(User.class);
+    }
+
+    @MutationMapping
+    public Mono<User> createUser(@Argument CreateUserInput input) {
+        return restApiClient.post()
+                .uri("/users")
+                .bodyValue(input)
+                .retrieve()
+                .bodyToMono(User.class);
+    }
+
+    @MutationMapping
+    public Mono<User> updateUser(@Argument Long id, @Argument CreateUserInput input) {
+        return restApiClient.put()
+                .uri("/users/{id}", id)
+                .bodyValue(input)
+                .retrieve()
+                .bodyToMono(User.class);
+    }
+
+    @MutationMapping
+    public Mono<Boolean> deleteUser(@Argument Long id) {
+        return restApiClient.delete()
+                .uri("/users/{id}", id)
+                .retrieve()
+                .bodyToMono(Void.class)
+                .thenReturn(true);
+    }
+}
+
+
+package com.example.demo.graphql;
+
+import graphql.GraphQLError;
+import graphql.GraphqlErrorBuilder;
+import org.springframework.graphql.execution.DataFetcherExceptionResolverAdapter;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
+
+@Component
+public class GraphqlExceptionResolver extends DataFetcherExceptionResolverAdapter {
+
+    @Override
+    protected Mono<GraphQLError> resolveToSingleError(Throwable ex) {
+        if (ex instanceof WebClientResponseException wcre) {
+            String message = switch (wcre.getStatusCode()) {
+                case NOT_FOUND  -> "User not found";
+                case CONFLICT   -> "Duplicate email";
+                case BAD_REQUEST-> "Invalid request";
+                default         -> "Upstream REST error";
+            };
+            return Mono.just(
+                    GraphqlErrorBuilder.newError()
+                            .message(message)
+                            .build()
+            );
+        }
+        return Mono.empty();
+    }
+}
