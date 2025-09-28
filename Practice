@@ -1,88 +1,55 @@
 sequenceDiagram
     autonumber
-    actor Ops as Batch Orchestrator
-    participant XLS as Excel Source (Address1..3, City, Pincode, State, Country)
-    participant Pre as Ingest & Normalize
-    participant H as Hierarchy-of-Trust Rules
-    participant Ctry as Country Validator
-    participant Pin as Pincode Extractor/Validator
+    actor Source as Excel (Raw Addresses)
+    participant Clean as Normalize & Clean
+    participant Country as Country Check
+    participant Pincode as Pincode Validator
     participant CS as City/State Resolver
-    participant Edge as Edge-Case Guard
-    participant Conf as Confidence Scorer
-    participant Route as Decision Router
-    participant Out as Target Table (City, State, Country, Pincode)
+    participant Guard as Edge-Case Guard
+    participant Conf as Confidence Scoring
+    participant Out as Standardized Output
     participant MR as Manual Review Queue
-    participant Log as Audit & Lineage
-    participant Met as Metrics
+    participant Log as Audit Log
 
-    %% 0. Orchestration
-    Ops->>XLS: Read next batch (N rows)
-    XLS-->>Ops: Raw rows
-    loop For each row
-      %% 1. Aggregate & clean
-      Ops->>Pre: Concatenate Address1..3 → full_address_string
-      Pre->>Pre: normalize (lowercase, trim, unify separators)
-      Pre->>Pre: remove noise (c/o, landmark, phone, emails)
-      Pre-->>H: cleaned_address + original columns
-
-      %% 2. Country check (must be India in PoC)
-      H->>Ctry: fuzzy match Country against master list
-      alt Country is "India" OR empty-but-Indian evidence
-        Ctry-->>H: OK (country=India)
-      else Foreign token present (e.g., "Singapore","SGP","UAE")
-        Ctry-->>H: FOREIGN_COUNTRY_IN_ADDRESS
-        H->>Log: write evidence + code
-        H->>MR: enqueue row (block auto-parse)
-      end
-
-      %% 3. Pincode-first resolution
-      H->>Pin: extract 6-digit pattern from pincode col then string
-      alt Valid pincode (in master) and not blacklisted (e.g., 600000, 123456)
-        Pin-->>H: canonical PIN + City/District/State
-        H->>CS: cross-check provided City/State vs PIN-derived
-        alt Matches
-          CS-->>H: CONSISTENT
-        else Mismatch
-          CS-->>H: CITY_MISMATCH (trust PIN per hierarchy)
-          H->>Log: record mismatch + override rationale
+    Source->>Clean: Load + concatenate Address1..3
+    Clean->>Country: Validate Country
+    alt Not India or Foreign tokens (e.g. Singapore)
+        Country-->>MR: Flag FOREIGN_COUNTRY_IN_ADDRESS
+        Country->>Log: Record reason
+    else India or empty but valid PIN
+        Country->>Pincode: Extract 6-digit PIN
+        alt Valid PIN & in Master DB
+            Pincode->>CS: Derive City & State
+            CS->>Guard: Cross-check with provided fields
+            alt Match
+                Guard->>Conf: Pass ✓
+            else Mismatch
+                Guard->>Log: CITY_MISMATCH
+                Guard->>Conf: Override with PIN data
+            end
+        else Invalid/Missing PIN
+            Pincode->>CS: Fallback string parse
+            alt Unique City/State found
+                CS->>Guard: Pass ✓
+            else Ambiguous (duplicate city names)
+                CS-->>MR: Flag AMBIGUOUS_CITY_STATE
+                CS->>Log: Record ambiguity
+            end
         end
-      else No pincode / invalid format / not in master
-        Pin-->>H: INVALID_OR_MISSING_PIN
-        H->>CS: parse City & State from string via master dictionaries
-        alt Unique resolution (1 city-state hit)
-          CS-->>H: canonical City/State
-        else Ambiguous (e.g., duplicate city names across states)
-          CS-->>H: AMBIGUOUS_CITY_STATE
-          H->>Log: record ambiguity evidence
-          H->>MR: enqueue row (needs human choice)
+
+        Guard->>Conf: Run special checks
+        Note over Guard,Conf: Examples:<br/>• Fake PINs (000000, 123456, 600000)<br/>• City names overlapping foreign places<br/>• Suspicious position of PIN in text
+
+        Conf->>Conf: Assign Confidence Score
+        alt High (≥90%)
+            Conf->>Out: Save standardized record
+            Conf->>Log: Record lineage
+        else Medium (70-90%)
+            Conf->>Out: Save + REVIEW_FLAG
+            Conf->>MR: Enqueue if policy
+            Conf->>Log: Record reason
+        else Low (<70%)
+            Conf-->>MR: Send for manual review
+            Conf->>Log: Record reason
         end
-      end
-
-      %% 4. Edge-case guards before commit
-      H->>Edge: run guards (Singapore localities, fake PINs, position heuristics)
-      alt Any guard triggered (e.g., PIN inside building code, "600000")
-        Edge-->>H: GUARD_HIT + code
-        H->>Log: write guard details
-        H->>MR: enqueue row
-      else
-        Edge-->>H: PASS
-      end
-
-      %% 5. Confidence & routing
-      H->>Conf: score(factors: PIN validity, cross-checks, conflicts, heuristics)
-      Conf-->>H: score ∈ [0,1], rationale, labels {HIGH/MED/LOW}
-      alt score ≥ 0.90 (HIGH)
-        H->>Out: upsert {Country=India, State, City, Pincode}
-        H->>Log: full lineage (inputs, matches, rules, score)
-      else score in [0.70,0.90) (MED)
-        H->>Out: upsert + REVIEW_FLAG (soft hold)
-        H->>MR: enqueue if policy requires
-        H->>Log: lineage + reason
-      else score < 0.70 (LOW)
-        H->>MR: enqueue with evidence & suggested options
-        H->>Log: lineage + reason
-      end
-
-      %% 6. Metrics
-      Ops->>Met: emit counters (auto-parse rate, mismatch counts, guard hits)
     end
