@@ -1,257 +1,88 @@
-package com.example.demo.graphql;
+sequenceDiagram
+    autonumber
+    actor Ops as Batch Orchestrator
+    participant XLS as Excel Source (Address1..3, City, Pincode, State, Country)
+    participant Pre as Ingest & Normalize
+    participant H as Hierarchy-of-Trust Rules
+    participant Ctry as Country Validator
+    participant Pin as Pincode Extractor/Validator
+    participant CS as City/State Resolver
+    participant Edge as Edge-Case Guard
+    participant Conf as Confidence Scorer
+    participant Route as Decision Router
+    participant Out as Target Table (City, State, Country, Pincode)
+    participant MR as Manual Review Queue
+    participant Log as Audit & Lineage
+    participant Met as Metrics
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-import org.springframework.web.reactive.function.client.WebClient;
+    %% 0. Orchestration
+    Ops->>XLS: Read next batch (N rows)
+    XLS-->>Ops: Raw rows
+    loop For each row
+      %% 1. Aggregate & clean
+      Ops->>Pre: Concatenate Address1..3 → full_address_string
+      Pre->>Pre: normalize (lowercase, trim, unify separators)
+      Pre->>Pre: remove noise (c/o, landmark, phone, emails)
+      Pre-->>H: cleaned_address + original columns
 
-@SpringBootApplication
-public class GraphqlApplication {
+      %% 2. Country check (must be India in PoC)
+      H->>Ctry: fuzzy match Country against master list
+      alt Country is "India" OR empty-but-Indian evidence
+        Ctry-->>H: OK (country=India)
+      else Foreign token present (e.g., "Singapore","SGP","UAE")
+        Ctry-->>H: FOREIGN_COUNTRY_IN_ADDRESS
+        H->>Log: write evidence + code
+        H->>MR: enqueue row (block auto-parse)
+      end
 
-    @Bean
-    public WebClient restApiClient() {
-        // Your REST API base URL
-        return WebClient.builder()
-                .baseUrl("http://localhost:8080/api") // adjust port if needed
-                .build();
-    }
+      %% 3. Pincode-first resolution
+      H->>Pin: extract 6-digit pattern from pincode col then string
+      alt Valid pincode (in master) and not blacklisted (e.g., 600000, 123456)
+        Pin-->>H: canonical PIN + City/District/State
+        H->>CS: cross-check provided City/State vs PIN-derived
+        alt Matches
+          CS-->>H: CONSISTENT
+        else Mismatch
+          CS-->>H: CITY_MISMATCH (trust PIN per hierarchy)
+          H->>Log: record mismatch + override rationale
+        end
+      else No pincode / invalid format / not in master
+        Pin-->>H: INVALID_OR_MISSING_PIN
+        H->>CS: parse City & State from string via master dictionaries
+        alt Unique resolution (1 city-state hit)
+          CS-->>H: canonical City/State
+        else Ambiguous (e.g., duplicate city names across states)
+          CS-->>H: AMBIGUOUS_CITY_STATE
+          H->>Log: record ambiguity evidence
+          H->>MR: enqueue row (needs human choice)
+        end
+      end
 
-    public static void main(String[] args) {
-        SpringApplication.run(GraphqlApplication.class, args);
-    }
-}
+      %% 4. Edge-case guards before commit
+      H->>Edge: run guards (Singapore localities, fake PINs, position heuristics)
+      alt Any guard triggered (e.g., PIN inside building code, "600000")
+        Edge-->>H: GUARD_HIT + code
+        H->>Log: write guard details
+        H->>MR: enqueue row
+      else
+        Edge-->>H: PASS
+      end
 
-server:
-  port: 8081   # run GraphQL on 8081 so REST can keep 8080
-spring:
-  graphql:
-    graphiql:
-      enabled: true   # enables a simple GraphiQL UI at /graphiql (Spring Boot 3.3+)
+      %% 5. Confidence & routing
+      H->>Conf: score(factors: PIN validity, cross-checks, conflicts, heuristics)
+      Conf-->>H: score ∈ [0,1], rationale, labels {HIGH/MED/LOW}
+      alt score ≥ 0.90 (HIGH)
+        H->>Out: upsert {Country=India, State, City, Pincode}
+        H->>Log: full lineage (inputs, matches, rules, score)
+      else score in [0.70,0.90) (MED)
+        H->>Out: upsert + REVIEW_FLAG (soft hold)
+        H->>MR: enqueue if policy requires
+        H->>Log: lineage + reason
+      else score < 0.70 (LOW)
+        H->>MR: enqueue with evidence & suggested options
+        H->>Log: lineage + reason
+      end
 
-type User {
-  id: ID!
-  name: String!
-  email: String!
-}
-
-input CreateUserInput {
-  name: String!
-  email: String!
-}
-
-type Query {
-  users: [User!]!
-  userById(id: ID!): User
-}
-
-type Mutation {
-  createUser(input: CreateUserInput!): User!
-  updateUser(id: ID!, input: CreateUserInput!): User!
-  deleteUser(id: ID!): Boolean!
-}
-
-package com.example.demo.graphql.model;
-
-public class User {
-    private Long id;
-    private String name;
-    private String email;
-
-    public User() {}
-    public User(Long id, String name, String email) {
-        this.id = id; this.name = name; this.email = email;
-    }
-    public Long getId()      { return id; }
-    public String getName()  { return name; }
-    public String getEmail() { return email; }
-    public void setId(Long id)         { this.id = id; }
-    public void setName(String name)   { this.name = name; }
-    public void setEmail(String email) { this.email = email; }
-}
-
-
-package com.example.demo.graphql.model;
-
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-
-public class CreateUserInput {
-    @NotBlank
-    private String name;
-    @NotBlank @Email
-    private String email;
-
-    public CreateUserInput() {}
-    public CreateUserInput(String name, String email) { this.name = name; this.email = email; }
-    public String getName() { return name; }
-    public String getEmail() { return email; }
-    public void setName(String name) { this.name = name; }
-    public void setEmail(String email) { this.email = email; }
-}
-
-package com.example.demo.graphql;
-
-import com.example.demo.graphql.model.CreateUserInput;
-import com.example.demo.graphql.model.User;
-import org.springframework.graphql.data.method.annotation.Argument;
-import org.springframework.graphql.data.method.annotation.MutationMapping;
-import org.springframework.graphql.data.method.annotation.QueryMapping;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
-@Controller
-public class UserGraphqlController {
-
-    private final WebClient restApiClient;
-    public UserGraphqlController(WebClient restApiClient) {
-        this.restApiClient = restApiClient;
-    }
-
-    @QueryMapping
-    public Flux<User> users() {
-        return restApiClient.get()
-                .uri("/users")
-                .retrieve()
-                .bodyToFlux(User.class);
-    }
-
-    @QueryMapping
-    public Mono<User> userById(@Argument Long id) {
-        return restApiClient.get()
-                .uri("/users/{id}", id)
-                .retrieve()
-                .bodyToMono(User.class);
-    }
-
-    @MutationMapping
-    public Mono<User> createUser(@Argument CreateUserInput input) {
-        return restApiClient.post()
-                .uri("/users")
-                .bodyValue(input)
-                .retrieve()
-                .bodyToMono(User.class);
-    }
-
-    @MutationMapping
-    public Mono<User> updateUser(@Argument Long id, @Argument CreateUserInput input) {
-        return restApiClient.put()
-                .uri("/users/{id}", id)
-                .bodyValue(input)
-                .retrieve()
-                .bodyToMono(User.class);
-    }
-
-    @MutationMapping
-    public Mono<Boolean> deleteUser(@Argument Long id) {
-        return restApiClient.delete()
-                .uri("/users/{id}", id)
-                .retrieve()
-                .bodyToMono(Void.class)
-                .thenReturn(true);
-    }
-}
-
-
-package com.example.demo.graphql;
-
-import graphql.GraphQLError;
-import graphql.GraphqlErrorBuilder;
-import org.springframework.graphql.execution.DataFetcherExceptionResolverAdapter;
-import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
-
-@Component
-public class GraphqlExceptionResolver extends DataFetcherExceptionResolverAdapter {
-
-    @Override
-    protected Mono<GraphQLError> resolveToSingleError(Throwable ex) {
-        if (ex instanceof WebClientResponseException wcre) {
-            String message = switch (wcre.getStatusCode()) {
-                case NOT_FOUND  -> "User not found";
-                case CONFLICT   -> "Duplicate email";
-                case BAD_REQUEST-> "Invalid request";
-                default         -> "Upstream REST error";
-            };
-            return Mono.just(
-                    GraphqlErrorBuilder.newError()
-                            .message(message)
-                            .build()
-            );
-        }
-        return Mono.empty();
-    }package com.example.demo.graphql;
-
-import graphql.GraphQLError;
-import graphql.GraphqlErrorBuilder;
-import org.springframework.graphql.execution.DataFetcherExceptionResolverAdapter;
-import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
-
-import static org.springframework.http.HttpStatus.*;
-
-@Component
-public class GraphqlExceptionResolver extends DataFetcherExceptionResolverAdapter {
-
-    @Override
-    protected Mono<GraphQLError> resolveToSingleError(Throwable ex) {
-        if (ex instanceof WebClientResponseException wcre) {
-            String message = switch (wcre.getStatusCode().value()) {
-                case 404 -> "User not found";
-                case 409 -> "Duplicate email";
-                case 400 -> "Invalid request";
-                default  -> "Upstream REST error";
-            };
-
-            return Mono.just(
-                    GraphqlErrorBuilder.newError()
-                            .message(message)
-                            .build()
-            );
-        }
-        return Mono.empty();
-    }
-}
-}
-
-
-
-
-package com.example.demo.graphql;
-
-import graphql.GraphQLError;
-import graphql.GraphqlErrorBuilder;
-import org.springframework.graphql.execution.DataFetcherExceptionResolverAdapter;
-import org.springframework.graphql.execution.DataFetchingEnvironment;
-import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
-
-@Component
-public class GraphqlExceptionResolver extends DataFetcherExceptionResolverAdapter {
-
-    @Override
-    protected Mono<GraphQLError> resolveToSingleError(Throwable ex, DataFetchingEnvironment env) {
-        if (ex instanceof WebClientResponseException wcre) {
-            String message = switch (wcre.getStatusCode().value()) {
-                case 404 -> "User not found";
-                case 409 -> "Duplicate email";
-                case 400 -> "Invalid request";
-                default  -> "Upstream REST error";
-            };
-
-            return Mono.just(
-                    GraphqlErrorBuilder.newError(env)
-                            .message(message)
-                            .build()
-            );
-        }
-        return Mono.empty();
-    }
-}
-curl -X POST http://localhost:8081/graphql \
-  -H "Content-Type: application/json" \
-  -d '{"query":"{ users { id name email } }"}'
+      %% 6. Metrics
+      Ops->>Met: emit counters (auto-parse rate, mismatch counts, guard hits)
+    end
