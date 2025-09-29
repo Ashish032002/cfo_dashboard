@@ -1,55 +1,43 @@
 sequenceDiagram
     autonumber
-    actor Source as Excel (Raw Addresses)
-    participant Clean as Normalize & Clean
-    participant Country as Country Check
-    participant Pincode as Pincode Validator
-    participant CS as City/State Resolver
-    participant Guard as Edge-Case Guard
-    participant Conf as Confidence Scoring
+    actor Source as Excel (Input Rows)
+    participant Clean as Normalize & Preprocess
+    participant Pin as Pincode Validator
+    participant City as City Resolver
+    participant State as State Resolver
+    participant Guard as Edge-Case Checks
+    participant Conf as Confidence Scorer
     participant Out as Standardized Output
-    participant MR as Manual Review Queue
-    participant Log as Audit Log
+    participant MR as Manual Review
 
-    Source->>Clean: Load + concatenate Address1..3
-    Clean->>Country: Validate Country
-    alt Not India or Foreign tokens (e.g. Singapore)
-        Country-->>MR: Flag FOREIGN_COUNTRY_IN_ADDRESS
-        Country->>Log: Record reason
-    else India or empty but valid PIN
-        Country->>Pincode: Extract 6-digit PIN
-        alt Valid PIN & in Master DB
-            Pincode->>CS: Derive City & State
-            CS->>Guard: Cross-check with provided fields
-            alt Match
-                Guard->>Conf: Pass ✓
-            else Mismatch
-                Guard->>Log: CITY_MISMATCH
-                Guard->>Conf: Override with PIN data
-            end
-        else Invalid/Missing PIN
-            Pincode->>CS: Fallback string parse
-            alt Unique City/State found
-                CS->>Guard: Pass ✓
-            else Ambiguous (duplicate city names)
-                CS-->>MR: Flag AMBIGUOUS_CITY_STATE
-                CS->>Log: Record ambiguity
-            end
-        end
-
-        Guard->>Conf: Run special checks
-        Note over Guard,Conf: Examples:<br/>• Fake PINs (000000, 123456, 600000)<br/>• City names overlapping foreign places<br/>• Suspicious position of PIN in text
-
-        Conf->>Conf: Assign Confidence Score
-        alt High (≥90%)
+    Source->>Clean: Load & clean Address1..3
+    Clean->>Pin: Extract 6-digit PIN
+    alt Valid PIN in Master DB
+        Pin->>City: Derive City & State from PIN
+        alt Matches input address
+            City->>Conf: Mark High Confidence
             Conf->>Out: Save standardized record
-            Conf->>Log: Record lineage
-        else Medium (70-90%)
-            Conf->>Out: Save + REVIEW_FLAG
-            Conf->>MR: Enqueue if policy
-            Conf->>Log: Record reason
-        else Low (<70%)
-            Conf-->>MR: Send for manual review
-            Conf->>Log: Record reason
+        else Mismatch with input
+            City->>Guard: Flag CITY_MISMATCH
+            Guard->>MR: Send for manual review
+        end
+    else Invalid / Missing PIN
+        Pin->>City: Try resolving by City string
+        alt Unique City found in DB
+            City->>State: Derive State
+            State->>Conf: Mark Medium Confidence
+            Conf->>Out: Save standardized record
+        else Ambiguous (same City in multiple States)
+            City->>State: Check if State provided in input
+            alt Matches one of possible States
+                State->>Conf: Accept with Medium Confidence
+                Conf->>Out: Save standardized record
+            else No valid State match
+                State->>Guard: Flag AMBIGUOUS_CITY_STATE
+                Guard->>MR: Manual review
+            end
         end
     end
+
+    %% Edge case handling
+    Guard->>MR: Handle fake PINs (000000, 123456, 600000) or invalid formats
