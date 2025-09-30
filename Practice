@@ -1,43 +1,141 @@
-sequenceDiagram
-    autonumber
-    actor Source as Excel (Input Rows)
-    participant Clean as Normalize & Preprocess
-    participant Pin as Pincode Validator
-    participant City as City Resolver
-    participant State as State Resolver
-    participant Guard as Edge-Case Checks
-    participant Conf as Confidence Scorer
-    participant Out as Standardized Output
-    participant MR as Manual Review
+import pandas as pd
+import re
 
-    Source->>Clean: Load & clean Address1..3
-    Clean->>Pin: Extract 6-digit PIN
-    alt Valid PIN in Master DB
-        Pin->>City: Derive City & State from PIN
-        alt Matches input address
-            City->>Conf: Mark High Confidence
-            Conf->>Out: Save standardized record
-        else Mismatch with input
-            City->>Guard: Flag CITY_MISMATCH
-            Guard->>MR: Send for manual review
-        end
-    else Invalid / Missing PIN
-        Pin->>City: Try resolving by City string
-        alt Unique City found in DB
-            City->>State: Derive State
-            State->>Conf: Mark Medium Confidence
-            Conf->>Out: Save standardized record
-        else Ambiguous (same City in multiple States)
-            City->>State: Check if State provided in input
-            alt Matches one of possible States
-                State->>Conf: Accept with Medium Confidence
-                Conf->>Out: Save standardized record
-            else No valid State match
-                State->>Guard: Flag AMBIGUOUS_CITY_STATE
-                Guard->>MR: Manual review
-            end
-        end
-    end
+# -----------------------------
+# Load Master Data
+# -----------------------------
+def load_master_data(city_file, pincode_file=None):
+    city_df = pd.read_excel(city_file)
+    city_df.columns = city_df.columns.str.strip().str.lower()
+    # Normalize names
+    city_df['town'] = city_df.iloc[:, 0].str.strip().str.lower()
+    city_df['state'] = city_df.iloc[:, 1].str.strip().str.lower()
+    return city_df
 
-    %% Edge case handling
-    Guard->>MR: Handle fake PINs (000000, 123456, 600000) or invalid formats
+# -----------------------------
+# Normalization Utils
+# -----------------------------
+def normalize_text(s):
+    if pd.isna(s):
+        return ""
+    return re.sub(r"\s+", " ", str(s).lower().strip())
+
+def concat_address(row):
+    return " ".join([
+        normalize_text(row.get("Address1", "")),
+        normalize_text(row.get("Address2", "")),
+        normalize_text(row.get("Address3", "")),
+        normalize_text(row.get("City", "")),
+        normalize_text(row.get("State", "")),
+        normalize_text(row.get("Pincode", "")),
+        normalize_text(row.get("Country", ""))
+    ])
+
+# -----------------------------
+# Core Validators
+# -----------------------------
+def extract_pincode(address_str):
+    match = re.findall(r"\b\d{6}\b", address_str)
+    return match[0] if match else None
+
+def is_fake_pincode(pin):
+    return pin in {"000000", "123456", "600000"}
+
+def validate_pincode(pin, master_df):
+    if not pin:
+        return False, None, None
+    if is_fake_pincode(pin):
+        return False, None, None
+    # Cross-check with DB if available
+    # (Here you would map pin -> city/state if you have the file)
+    return True, None, None   # Placeholder until pincode master is integrated
+
+def validate_city_state(city, state, master_df):
+    city = normalize_text(city)
+    state = normalize_text(state)
+    matches = master_df[master_df['town'] == city]
+    if matches.empty:
+        return None, None, "CITY_NOT_FOUND"
+    if len(matches['state'].unique()) > 1:
+        # Ambiguous city
+        if state in matches['state'].values:
+            return city, state, "RESOLVED_WITH_STATE"
+        return None, None, "AMBIGUOUS_CITY"
+    return city, matches['state'].iloc[0], "CITY_MATCH"
+
+# -----------------------------
+# Confidence Assignment
+# -----------------------------
+def assign_confidence(pin_valid, city_status, guard_flag):
+    if guard_flag in {"AMBIGUOUS_CITY", "CITY_NOT_FOUND"}:
+        return 0.6, "Low"
+    if not pin_valid and city_status == "CITY_MATCH":
+        return 0.8, "Medium"
+    if pin_valid and city_status == "CITY_MATCH":
+        return 0.95, "High"
+    return 0.5, "Low"
+
+# -----------------------------
+# Main Processing
+# -----------------------------
+def process_addresses(input_file, city_file, out_clean, out_flagged):
+    df = pd.read_excel(input_file)
+    master_df = load_master_data(city_file)
+
+    results = []
+    flagged = []
+
+    for _, row in df.iterrows():
+        record = row.to_dict()
+        address_str = concat_address(record)
+
+        # Step 1: Extract pincode
+        pin = extract_pincode(address_str)
+
+        # Step 2: Validate PIN
+        pin_valid, _, _ = validate_pincode(pin, master_df)
+
+        # Step 3: Validate City/State
+        city, state, city_status = validate_city_state(record.get("City", ""), record.get("State", ""), master_df)
+
+        # Step 4: Edge case guards
+        guard_flag = city_status
+        if is_fake_pincode(pin):
+            guard_flag = "FAKE_PIN"
+
+        # Step 5: Confidence scoring
+        score, level = assign_confidence(pin_valid, city_status, guard_flag)
+
+        result = {
+            **record,
+            "normalized_address": address_str,
+            "extracted_pin": pin,
+            "pin_valid": pin_valid,
+            "resolved_city": city,
+            "resolved_state": state,
+            "guard_flag": guard_flag,
+            "confidence_score": score,
+            "confidence_level": level
+        }
+
+        if level == "Low":
+            flagged.append(result)
+        else:
+            results.append(result)
+
+    # Export results
+    pd.DataFrame(results).to_excel(out_clean, index=False)
+    pd.DataFrame(flagged).to_excel(out_flagged, index=False)
+    print(f"✅ Processing complete. Clean={len(results)}, Flagged={len(flagged)}")
+
+
+# -----------------------------
+# Run the pipeline
+# -----------------------------
+if __name__ == "__main__":
+    process_addresses(
+        input_file="address_data.xlsx",
+        city_file="list_of_cities.xlsx",
+        out_clean="standardized_output.xlsx",
+        out_flagged="flagged_output.xlsx"
+    )
