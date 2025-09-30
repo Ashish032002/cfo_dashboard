@@ -126,7 +126,7 @@ def process_addresses(input_file, city_file, out_clean, out_flagged):
     # Export results
     pd.DataFrame(results).to_excel(out_clean, index=False)
     pd.DataFrame(flagged).to_excel(out_flagged, index=False)
-    print(f"✅ Processing complete. Clean={len(results)}, Flagged={len(flagged)}")
+    print(f"Processing complete. Clean={len(results)}, Flagged={len(flagged)}")
 
 
 # -----------------------------
