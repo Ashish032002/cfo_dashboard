@@ -127,7 +127,7 @@ def main():
         # Save Excel for each batch
         part_file = f"validated_output_part{batch_no}.xlsx"
         df.to_excel(part_file, index=False)
-        print(f" Saved {part_file} ({len(df)} rows, {end}/{total})")
+        print(f"Saved {part_file} ({len(df)} rows, {end}/{total})")
 
         # Append to DB table
         with eng.begin() as con:
@@ -149,7 +149,7 @@ def main():
         print(f"Batch {batch_no} inserted into DB.\n")
         batch_no += 1
 
-    print(f" Validation completed for all {total} records. Output split into {batch_no-1} Excel files.")
+    print(f"Validation completed for all {total} records. Output split into {batch_no-1} Excel files.")
 
 # -------------------------------
 if __name__ == "__main__":
