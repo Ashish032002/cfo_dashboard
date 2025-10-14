@@ -1,141 +1,72 @@
-import pandas as pd
-import re
+import re, json, pandas as pd
+from sqlalchemy import text
+from db_config import get_db_connection
 
-# -----------------------------
-# Load Master Data
-# -----------------------------
-def load_master_data(city_file, pincode_file=None):
-    city_df = pd.read_excel(city_file)
-    city_df.columns = city_df.columns.str.strip().str.lower()
-    # Normalize names
-    city_df['town'] = city_df.iloc[:, 0].str.strip().str.lower()
-    city_df['state'] = city_df.iloc[:, 1].str.strip().str.lower()
-    return city_df
+try:
+    from rapidfuzz import fuzz
+    def sim(a,b): return fuzz.token_set_ratio(a or '', b or '')/100
+except:
+    import difflib
+    def sim(a,b): return difflib.SequenceMatcher(None,(a or '').lower(),(b or '').lower()).ratio()
 
-# -----------------------------
-# Normalization Utils
-# -----------------------------
-def normalize_text(s):
-    if pd.isna(s):
-        return ""
-    return re.sub(r"\s+", " ", str(s).lower().strip())
+def extract_pin(txt):
+    if not txt: return None
+    m=re.search(r"(?<!\d)(\d{6})(?!\d)", str(txt))
+    return m.group(1) if m else None
 
-def concat_address(row):
-    return " ".join([
-        normalize_text(row.get("Address1", "")),
-        normalize_text(row.get("Address2", "")),
-        normalize_text(row.get("Address3", "")),
-        normalize_text(row.get("City", "")),
-        normalize_text(row.get("State", "")),
-        normalize_text(row.get("Pincode", "")),
-        normalize_text(row.get("Country", ""))
-    ])
+def main():
+    eng=get_db_connection()
+    with eng.begin() as con:
+        master=pd.read_sql("SELECT * FROM av.master_ref",con)
+        inp=pd.read_sql("SELECT * FROM av.input_addresses",con)
 
-# -----------------------------
-# Core Validators
-# -----------------------------
-def extract_pincode(address_str):
-    match = re.findall(r"\b\d{6}\b", address_str)
-    return match[0] if match else None
+    results=[]
+    for _,r in inp.iterrows():
+        addr=" ".join([str(x) for x in [r.address1,r.address2,r.address3] if x and x!='nan']).strip()
+        pin=extract_pin(addr) or extract_pin(r.pincode)
+        city_in=str(r.city or '').strip().title()
+        state_in=str(r.state or '').strip().title()
+        country="India"
+        loc=None
+        city_conf=state_conf=country_conf=0
 
-def is_fake_pincode(pin):
-    return pin in {"000000", "123456", "600000"}
-
-def validate_pincode(pin, master_df):
-    if not pin:
-        return False, None, None
-    if is_fake_pincode(pin):
-        return False, None, None
-    # Cross-check with DB if available
-    # (Here you would map pin -> city/state if you have the file)
-    return True, None, None   # Placeholder until pincode master is integrated
-
-def validate_city_state(city, state, master_df):
-    city = normalize_text(city)
-    state = normalize_text(state)
-    matches = master_df[master_df['town'] == city]
-    if matches.empty:
-        return None, None, "CITY_NOT_FOUND"
-    if len(matches['state'].unique()) > 1:
-        # Ambiguous city
-        if state in matches['state'].values:
-            return city, state, "RESOLVED_WITH_STATE"
-        return None, None, "AMBIGUOUS_CITY"
-    return city, matches['state'].iloc[0], "CITY_MATCH"
-
-# -----------------------------
-# Confidence Assignment
-# -----------------------------
-def assign_confidence(pin_valid, city_status, guard_flag):
-    if guard_flag in {"AMBIGUOUS_CITY", "CITY_NOT_FOUND"}:
-        return 0.6, "Low"
-    if not pin_valid and city_status == "CITY_MATCH":
-        return 0.8, "Medium"
-    if pin_valid and city_status == "CITY_MATCH":
-        return 0.95, "High"
-    return 0.5, "Low"
-
-# -----------------------------
-# Main Processing
-# -----------------------------
-def process_addresses(input_file, city_file, out_clean, out_flagged):
-    df = pd.read_excel(input_file)
-    master_df = load_master_data(city_file)
-
-    results = []
-    flagged = []
-
-    for _, row in df.iterrows():
-        record = row.to_dict()
-        address_str = concat_address(record)
-
-        # Step 1: Extract pincode
-        pin = extract_pincode(address_str)
-
-        # Step 2: Validate PIN
-        pin_valid, _, _ = validate_pincode(pin, master_df)
-
-        # Step 3: Validate City/State
-        city, state, city_status = validate_city_state(record.get("City", ""), record.get("State", ""), master_df)
-
-        # Step 4: Edge case guards
-        guard_flag = city_status
-        if is_fake_pincode(pin):
-            guard_flag = "FAKE_PIN"
-
-        # Step 5: Confidence scoring
-        score, level = assign_confidence(pin_valid, city_status, guard_flag)
-
-        result = {
-            **record,
-            "normalized_address": address_str,
-            "extracted_pin": pin,
-            "pin_valid": pin_valid,
-            "resolved_city": city,
-            "resolved_state": state,
-            "guard_flag": guard_flag,
-            "confidence_score": score,
-            "confidence_level": level
-        }
-
-        if level == "Low":
-            flagged.append(result)
+        m_city=master[master['pincode']==pin] if pin else master
+        if not m_city.empty:
+            m_city['cs']=m_city['city'].apply(lambda x: sim(x,city_in))
+            best=m_city.sort_values('cs',ascending=False).head(1).iloc[0]
+            loc=best.office_name
+            city_conf=best.cs
+            state_conf=sim(best.state,state_in)
         else:
-            results.append(result)
+            best=None
 
-    # Export results
-    pd.DataFrame(results).to_excel(out_clean, index=False)
-    pd.DataFrame(flagged).to_excel(out_flagged, index=False)
-    print(f"Processing complete. Clean={len(results)}, Flagged={len(flagged)}")
+        country_conf=1.0 if country.lower()=="india" else 0.5
+        overall=(0.5*city_conf+0.3*state_conf+0.2*country_conf)
+        flag="High" if overall>=0.85 else ("Medium" if overall>=0.6 else "Low")
 
+        results.append({
+            "Address1":addr,
+            "City":best.city if best is not None else city_in,
+            "State":best.state if best is not None else state_in,
+            "Pincode":pin,
+            "Country":country,
+            "City_Confidence":round(city_conf,3),
+            "State_Confidence":round(state_conf,3),
+            "Country_Confidence":round(country_conf,3),
+            "Overall_Confidence":round(overall,3),
+            "Flag":flag,
+            "Locality":loc
+        })
 
-# -----------------------------
-# Run the pipeline
-# -----------------------------
-if __name__ == "__main__":
-    process_addresses(
-        input_file="address_data.xlsx",
-        city_file="list_of_cities.xlsx",
-        out_clean="standardized_output.xlsx",
-        out_flagged="flagged_output.xlsx"
-    )
+    df=pd.DataFrame(results)
+    df.to_excel("validated_output_final.xlsx",index=False)
+    with eng.begin() as con:
+        con.execute(text("DROP TABLE IF EXISTS av.validation_result_final"))
+        con.execute(text("CREATE TABLE av.validation_result_final(address1 TEXT, city TEXT, state TEXT, pincode TEXT, country TEXT, city_confidence NUMERIC, state_confidence NUMERIC, country_confidence NUMERIC, overall_confidence NUMERIC, flag TEXT, locality TEXT)"))
+        for _,row in df.iterrows():
+            con.execute(text("INSERT INTO av.validation_result_final(address1,city,state,pincode,country,city_confidence,state_confidence,country_confidence,overall_confidence,flag,locality) VALUES(:a,:c,:s,:p,:co,:cc,:sc,:coc,:oc,:f,:l)"),
+                        {"a":row.Address1,"c":row.City,"s":row.State,"p":row.Pincode,"co":row.Country,"cc":row.City_Confidence,"sc":row.State_Confidence,"coc":row.Country_Confidence,"oc":row.Overall_Confidence,"f":row.Flag,"l":row.Locality})
+    print("Validation completed, results in av.validation_result_final and Excel file.")
+
+if __name__=="__main__":
+    main()
