@@ -1,9 +1,9 @@
-import re, json, pandas as pd
+import re, pandas as pd
 from sqlalchemy import text
 from db_config import get_db_connection
 
 # -------------------------------
-# Fuzzy similarity (RapidFuzz preferred)
+# Fuzzy similarity
 # -------------------------------
 try:
     from rapidfuzz import fuzz
@@ -13,35 +13,31 @@ except:
     def sim(a, b): return difflib.SequenceMatcher(None, (a or '').lower(), (b or '').lower()).ratio()
 
 # -------------------------------
-# Pincode extraction helper
+# Helpers
 # -------------------------------
 def extract_pin(txt):
-    if not txt:
-        return None
-    m = re.search(r"(?<!\d)(\d{6})(?!\d)", str(txt))
+    if not txt: return None
+    m = re.search(r"(?<!\\d)(\\d{6})(?!\\d)", str(txt))
     return m.group(1) if m else None
 
-# -------------------------------
-# Normalize state names using abbreviation list
-# -------------------------------
 def normalize_state_name(state_name, state_to_abbr, abbr_to_state):
-    if pd.isna(state_name):
-        return None
+    if pd.isna(state_name): return None
     s = state_name.strip().title()
-    if s in state_to_abbr:  # full name found
+    if s in state_to_abbr:
         return s
-    elif s.upper() in abbr_to_state:  # abbreviation found
+    elif s.upper() in abbr_to_state:
         return abbr_to_state[s.upper()]
     else:
         return s
 
 # -------------------------------
-# Main validation pipeline
+# Main
 # -------------------------------
 def main():
+    BATCH_SIZE = 10000
     eng = get_db_connection()
 
-    # Read abbreviation list
+    # Load abbreviation list
     abbr_path = r"C:\Users\ashish.singh\Downloads\address_validation_upload_final\datasets\abbreviation_list 1.csv"
     abbr = pd.read_csv(abbr_path)
     abbr.columns = abbr.columns.str.strip().str.lower()
@@ -49,74 +45,21 @@ def main():
     abbr['abbreviation'] = abbr['abbreviation'].str.strip().str.upper()
     state_to_abbr = dict(zip(abbr['state'], abbr['abbreviation']))
     abbr_to_state = dict(zip(abbr['abbreviation'], abbr['state']))
-
     print(f"Loaded {len(abbr)} state abbreviations.")
 
+    # Load master + input
     with eng.begin() as con:
         master = pd.read_sql("SELECT * FROM av.master_ref", con)
         inp = pd.read_sql("SELECT * FROM av.input_address", con)
 
-    # Normalize state names
+    # Normalize
     inp['state'] = inp['state'].apply(lambda x: normalize_state_name(x, state_to_abbr, abbr_to_state))
     master['state'] = master['state'].apply(lambda x: normalize_state_name(x, state_to_abbr, abbr_to_state))
 
-    results = []
-    total = len(inp)
-    print(f"Starting validation on {total} addresses...")
-
-    for i, r in inp.iterrows():
-        addr = " ".join([str(x) for x in [r.address1, r.address2, r.address3] if x and x != 'nan']).strip()
-        pin = extract_pin(addr) or extract_pin(r.pincode)
-        city_in = str(r.city or '').strip().title()
-        state_in = str(r.state or '').strip().title()
-        country = "India"
-        loc = None
-        city_conf = state_conf = country_conf = 0
-
-        # -------------------------------
-        # Match using pincode
-        # -------------------------------
-        m_city = master[master['pincode'] == pin] if pin else master
-        if not m_city.empty:
-            m_city['cs'] = m_city['city'].apply(lambda x: sim(x, city_in))
-            best = m_city.sort_values('cs', ascending=False).head(1).iloc[0]
-            loc = best.office_name
-            city_conf = best.cs
-            state_conf = sim(best.state, state_in)
-        else:
-            best = None
-
-        country_conf = 1.0 if country.lower() == "india" else 0.5
-        overall = (0.5 * city_conf + 0.3 * state_conf + 0.2 * country_conf)
-        flag = "High" if overall >= 0.85 else ("Medium" if overall >= 0.6 else "Low")
-
-        results.append({
-            "Address1": addr,
-            "City": best.city if best is not None else city_in,
-            "State": best.state if best is not None else state_in,
-            "Pincode": pin,
-            "Country": country,
-            "City_Confidence": round(city_conf, 3),
-            "State_Confidence": round(state_conf, 3),
-            "Country_Confidence": round(country_conf, 3),
-            "Overall_Confidence": round(overall, 3),
-            "Flag": flag,
-            "Locality": loc
-        })
-
-        if i % 50000 == 0 and i > 0:
-            print(f"Validated {i}/{total} rows...")
-
-    # -------------------------------
-    # Output to Excel + Database
-    # -------------------------------
-    df = pd.DataFrame(results)
-    df.to_excel("validated_output_final.xlsx", index=False)
-    print(f"\n✅ Validation completed. Output written to validated_output_final.xlsx")
-
+    # Create output table (fresh)
     with eng.begin() as con:
-        con.execute(text("DROP TABLE IF EXISTS av.validation_result_final"))
         con.execute(text("""
+            DROP TABLE IF EXISTS av.validation_result_final;
             CREATE TABLE av.validation_result_final(
                 address1 TEXT,
                 city TEXT,
@@ -129,24 +72,84 @@ def main():
                 overall_confidence NUMERIC,
                 flag TEXT,
                 locality TEXT
-            )
+            );
         """))
-        for _, row in df.iterrows():
-            con.execute(text("""
-                INSERT INTO av.validation_result_final(
-                    address1, city, state, pincode, country,
-                    city_confidence, state_confidence, country_confidence,
-                    overall_confidence, flag, locality
-                )
-                VALUES(:a,:c,:s,:p,:co,:cc,:sc,:coc,:oc,:f,:l)
-            """), {
-                "a": row.Address1, "c": row.City, "s": row.State, "p": row.Pincode,
-                "co": row.Country, "cc": row.City_Confidence, "sc": row.State_Confidence,
-                "coc": row.Country_Confidence, "oc": row.Overall_Confidence,
-                "f": row.Flag, "l": row.Locality
+
+    total = len(inp)
+    print(f"Starting validation on {total} records in batches of {BATCH_SIZE}...")
+
+    batch_no = 1
+    for start in range(0, total, BATCH_SIZE):
+        end = min(start + BATCH_SIZE, total)
+        subset = inp.iloc[start:end]
+        results = []
+
+        for _, r in subset.iterrows():
+            addr = " ".join([str(x) for x in [r.address1, r.address2, r.address3] if x and x != 'nan']).strip()
+            pin = extract_pin(addr) or extract_pin(r.pincode)
+            city_in = str(r.city or '').strip().title()
+            state_in = str(r.state or '').strip().title()
+            country = "India"
+            loc = None
+            city_conf = state_conf = country_conf = 0
+
+            m_city = master[master['pincode'] == pin] if pin else master
+            if not m_city.empty:
+                m_city['cs'] = m_city['city'].apply(lambda x: sim(x, city_in))
+                best = m_city.sort_values('cs', ascending=False).head(1).iloc[0]
+                loc = best.office_name
+                city_conf = best.cs
+                state_conf = sim(best.state, state_in)
+            else:
+                best = None
+
+            country_conf = 1.0 if country.lower() == "india" else 0.5
+            overall = (0.5 * city_conf + 0.3 * state_conf + 0.2 * country_conf)
+            flag = "High" if overall >= 0.85 else ("Medium" if overall >= 0.6 else "Low")
+
+            results.append({
+                "Address1": addr,
+                "City": best.city if best is not None else city_in,
+                "State": best.state if best is not None else state_in,
+                "Pincode": pin,
+                "Country": country,
+                "City_Confidence": round(city_conf, 3),
+                "State_Confidence": round(state_conf, 3),
+                "Country_Confidence": round(country_conf, 3),
+                "Overall_Confidence": round(overall, 3),
+                "Flag": flag,
+                "Locality": loc
             })
 
-    print("✅ Results saved in table av.validation_result_final.")
+        # Convert to DataFrame
+        df = pd.DataFrame(results)
+
+        # Save Excel for each batch
+        part_file = f"validated_output_part{batch_no}.xlsx"
+        df.to_excel(part_file, index=False)
+        print(f"✅ Saved {part_file} ({len(df)} rows, {end}/{total})")
+
+        # Append to DB table
+        with eng.begin() as con:
+            for _, row in df.iterrows():
+                con.execute(text("""
+                    INSERT INTO av.validation_result_final(
+                        address1, city, state, pincode, country,
+                        city_confidence, state_confidence, country_confidence,
+                        overall_confidence, flag, locality
+                    )
+                    VALUES(:a,:c,:s,:p,:co,:cc,:sc,:coc,:oc,:f,:l)
+                """), {
+                    "a": row.Address1, "c": row.City, "s": row.State, "p": row.Pincode,
+                    "co": row.Country, "cc": row.City_Confidence, "sc": row.State_Confidence,
+                    "coc": row.Country_Confidence, "oc": row.Overall_Confidence,
+                    "f": row.Flag, "l": row.Locality
+                })
+
+        print(f"Batch {batch_no} inserted into DB.\n")
+        batch_no += 1
+
+    print(f"✅ Validation completed for all {total} records. Output split into {batch_no-1} Excel files.")
 
 # -------------------------------
 if __name__ == "__main__":
