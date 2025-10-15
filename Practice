@@ -51,33 +51,39 @@ def validate_record(record, master_by_pin, country, state_to_abbr, abbr_to_state
         city_conf = state_conf = 0
         country_conf = 1.0 if country.lower() == "india" else 0.5
         loc = None
-        flag = "No"  # default
+        flag = "No"
         confidence_level = "Low"
+        pin_match = "No"
 
-        # No pincode found → immediate flag
+        # --- PINCODE VALIDATION ---
         if not pin:
             flag = "Yes"
         else:
             dfp = master_by_pin.get(pin)
             if dfp is None or dfp.empty:
-                # Pincode not in DB → flag
+                # PIN not in master DB
                 flag = "Yes"
+                pin_match = "No"
             else:
-                # Derive best match based on city
+                # PIN found → check city/state match
                 dfp['city_sim'] = dfp['city'].apply(lambda x: sim(x, city_in))
                 best = dfp.sort_values('city_sim', ascending=False).head(1).iloc[0]
                 loc = best.office_name
                 city_conf = best.city_sim
                 state_conf = sim(best.state, state_in)
 
-                # If multiple cities share the same pincode → ambiguous
+                # PIN exists but check consistency
+                if (city_conf >= 0.6 and state_conf >= 0.6):
+                    pin_match = "Yes"
+                else:
+                    pin_match = "No"
+                    flag = "Yes"
+
+                # Multiple cities with same pin → ambiguous
                 if len(dfp['city'].unique()) > 1:
                     flag = "Yes"
 
-                # If mismatch in state or very low similarity → flag
-                if city_conf < 0.4 or state_conf < 0.4:
-                    flag = "Yes"
-
+        # --- CONFIDENCE SCORING ---
         overall = (0.5 * city_conf + 0.3 * state_conf + 0.2 * country_conf)
         if overall >= 0.85:
             confidence_level = "High"
@@ -86,8 +92,8 @@ def validate_record(record, master_by_pin, country, state_to_abbr, abbr_to_state
         else:
             confidence_level = "Low"
 
-        # Add additional flag logic: if both city/state missing
-        if not city_in and not state_in:
+        # If no city or state → flag directly
+        if not city_in or not state_in:
             flag = "Yes"
 
         return {
@@ -96,6 +102,7 @@ def validate_record(record, master_by_pin, country, state_to_abbr, abbr_to_state
             "State": best.state if 'best' in locals() else state_in,
             "Pincode": pin,
             "Country": country,
+            "Pin_Match": pin_match,
             "City_Confidence": round(city_conf, 3),
             "State_Confidence": round(state_conf, 3),
             "Country_Confidence": round(country_conf, 3),
@@ -110,6 +117,7 @@ def validate_record(record, master_by_pin, country, state_to_abbr, abbr_to_state
             "Address1": str(record.get('address1')),
             "City": "", "State": "", "Pincode": "",
             "Country": "India",
+            "Pin_Match": "No",
             "City_Confidence": 0, "State_Confidence": 0, "Country_Confidence": 0,
             "Overall_Confidence": 0, "Confidence_Level": "Low",
             "Flag": f"Yes (Error: {e})", "Locality": ""
@@ -152,8 +160,9 @@ def main():
             DROP TABLE IF EXISTS av.validation_result_final;
             CREATE TABLE av.validation_result_final(
                 address1 TEXT, city TEXT, state TEXT, pincode TEXT, country TEXT,
-                city_confidence NUMERIC, state_confidence NUMERIC, country_confidence NUMERIC,
-                overall_confidence NUMERIC, confidence_level TEXT, flag TEXT, locality TEXT
+                pin_match TEXT, city_confidence NUMERIC, state_confidence NUMERIC,
+                country_confidence NUMERIC, overall_confidence NUMERIC,
+                confidence_level TEXT, flag TEXT, locality TEXT
             );
         """))
 
