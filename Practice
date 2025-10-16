@@ -5,9 +5,9 @@ from rapidfuzz import fuzz, process
 from tqdm import tqdm
 from db_config import get_db_connection
 
-# -------------------------------
+# ------------------------------------
 # CONFIG
-# -------------------------------
+# ------------------------------------
 CITY_THRESHOLD = 0.5
 STATE_THRESHOLD = 0.6
 
@@ -25,9 +25,9 @@ CITY_ALIASES = {
     "gurugram":"gurgaon","ahmadabad":"ahmedabad"
 }
 
-# -------------------------------
+# ------------------------------------
 # HELPERS
-# -------------------------------
+# ------------------------------------
 def strip_accents(s): 
     return ''.join(ch for ch in unicodedata.normalize('NFKD', str(s)) if not unicodedata.combining(ch))
 
@@ -50,35 +50,33 @@ def extract_pin(txt):
     m = re.search(r'(?<!\d)(\d{6})(?!\d)', str(txt))
     return m.group(1) if m else None
 
-# -------------------------------
-# STATE MAPPING (from abbreviation_list 1.csv)
-# -------------------------------
+# ------------------------------------
+# STATE MAPPINGS
+# ------------------------------------
 def load_state_mappings():
     csv_path = os.path.join(os.path.dirname(__file__), "datasets", "abbreviation_list 1.csv")
     df = pd.read_csv(csv_path)
     df.columns = df.columns.str.strip().str.title()
-    df["State"] = df["State"].str.strip().title()
-    df["Abbreviation"] = df["Abbreviation"].str.strip().str.upper()
+    df["State"] = df["State"].astype(str).str.strip().str.title()
+    df["Abbreviation"] = df["Abbreviation"].astype(str).str.strip().str.upper()
     state_to_abbr = dict(zip(df["State"], df["Abbreviation"]))
     abbr_to_state = dict(zip(df["Abbreviation"], df["State"]))
+    print(f"✅ Loaded {len(state_to_abbr)} state mappings from abbreviation_list 1.csv")
     return state_to_abbr, abbr_to_state
 
 def normalize_state(s, state_to_abbr, abbr_to_state):
     if not s: return None
     s_clean = clean_text(str(s)).replace('.', '').upper().strip()
-    # direct abbreviation
     if s_clean in abbr_to_state:
         return abbr_to_state[s_clean]
-    # full name check
     if s_clean.title() in state_to_abbr:
         return s_clean.title()
-    # fuzzy fallback
     best, score, _ = process.extractOne(s_clean.title(), list(state_to_abbr.keys()))
     return best if score >= 85 else s_clean.title()
 
-# -------------------------------
+# ------------------------------------
 # VALIDATION CORE
-# -------------------------------
+# ------------------------------------
 def validate_batch(df, master_by_pin, batch_no, state_to_abbr, abbr_to_state):
     results=[]
     for _,r in tqdm(df.iterrows(), total=len(df), desc=f"Batch {batch_no}"):
@@ -140,18 +138,31 @@ def validate_batch(df, master_by_pin, batch_no, state_to_abbr, abbr_to_state):
         })
     return pd.DataFrame(results)
 
-# -------------------------------
+# ------------------------------------
 # MAIN EXECUTION
-# -------------------------------
+# ------------------------------------
 def main():
-    print("🚀 Starting Address Validator v6 ...")
+    print("🚀 Starting Address Validator v7 ...")
     eng=get_db_connection()
     with eng.begin() as con:
         master=pd.read_sql("SELECT * FROM av.master_ref",con)
         inp=pd.read_sql("SELECT * FROM av.input_addresses",con)
 
     state_to_abbr, abbr_to_state = load_state_mappings()
-    print("✅ Loaded state abbreviation list.")
+
+    # ✅ Drop & recreate table before any insertion
+    with eng.begin() as con:
+        con.execute(text("DROP TABLE IF EXISTS av.validation_result_final CASCADE"))
+        con.execute(text("""
+            CREATE TABLE av.validation_result_final (
+                address1 TEXT, city TEXT, state TEXT, pincode TEXT, country TEXT,
+                pin_match TEXT, pin_match_score NUMERIC,
+                city_confidence NUMERIC, state_confidence NUMERIC,
+                overall_confidence NUMERIC, confidence_level TEXT,
+                flag TEXT, reason TEXT, locality TEXT
+            )
+        """))
+        print("✅ Recreated table av.validation_result_final")
 
     master_by_pin={k:v for k,v in master.groupby('pincode')}
     chunks=[inp[i:i+10000] for i in range(0,len(inp),10000)]
@@ -162,19 +173,9 @@ def main():
         df_part.to_excel(fname,index=False)
         print(f"💾 Saved {fname}")
 
-        # push batch to DB
         df_db=df_part.fillna("").copy()
         df_db.columns=df_db.columns.str.lower()
         with eng.begin() as con:
-            con.execute(text("""
-                CREATE TABLE IF NOT EXISTS av.validation_result_final (
-                    address1 TEXT, city TEXT, state TEXT, pincode TEXT, country TEXT,
-                    pin_match TEXT, pin_match_score NUMERIC,
-                    city_confidence NUMERIC, state_confidence NUMERIC,
-                    overall_confidence NUMERIC, confidence_level TEXT,
-                    flag TEXT, reason TEXT, locality TEXT
-                )
-            """))
             for _,row in df_db.iterrows():
                 con.execute(text("""
                     INSERT INTO av.validation_result_final
@@ -189,8 +190,9 @@ def main():
                     "oc":row.overall_confidence,"cl":row.confidence_level,
                     "f":row.flag,"r":row.reason,"l":row.locality
                 })
+        print(f"✅ Batch {i} inserted into DB ({len(df_db)} rows).")
 
-    print("🎯 Validation completed. Results available in av.validation_result_final and Excel parts.")
+    print("🎯 All batches processed successfully!")
 
 if __name__=="__main__":
     main()
