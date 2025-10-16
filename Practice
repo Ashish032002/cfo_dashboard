@@ -1,307 +1,165 @@
 import re
-import os
 import unicodedata
 import pandas as pd
 from sqlalchemy import text
 from db_config import get_db_connection
+from rapidfuzz import fuzz
+from tqdm import tqdm
 
-# =========================
-# Config
-# =========================
-BATCH_SIZE = 10_000          # excel & DB insert per 10k
-COUNTRY_STATIC = "India"     # per your requirement
-ABBR_CSV_CANDIDATES = [
-    r".\datasets\abbreviation_list 1.csv",
-    r"./datasets/abbreviation_list 1.csv",
-    r".\abbreviation_list 1.csv",
-    r"./abbreviation_list 1.csv",
-]
+# -------------------------------
+# Configurable thresholds
+# -------------------------------
+CITY_THRESHOLD = 0.5
+STATE_THRESHOLD = 0.6
 
-# =========================
-# Similarity
-# =========================
-try:
-    from rapidfuzz import fuzz
-    def sim(a, b): return fuzz.token_set_ratio(a or "", b or "") / 100.0
-except Exception:
-    import difflib
-    def sim(a, b): return difflib.SequenceMatcher(None, (a or "").lower(), (b or "").lower()).ratio()
-
-# =========================
-# Normalization helpers
-# =========================
+# -------------------------------
+# Text normalization helpers
+# -------------------------------
 STOP_WORDS = {
-    "division", "city", "district", "region", "south", "north", "east", "west",
-    "so", "s.o", "h.o", "bo", "b.o", "sub", "office", "post", "p.o", "po",
-    "nodal", "rms", "ho", "do", "co", "branch", "branches", "central", "rural",
-    "urban", "taluk", "taluka", "mandal", "zone", "sec", "sector"
+    "division","city","district","region","circle","zone",
+    "south","north","east","west","office","so","s.o","bo",
+    "b.o","po","p.o","head","branch","rms","ho","do","co",
+    "post","nodal","sub","urban","rural","taluk","mandal"
 }
 
 CITY_ALIASES = {
-    "bombay": "mumbai",
-    "bengaluru": "bangalore",
-    "bengluru": "bangalore",
-    "benglore": "bangalore",
-    "calcutta": "kolkata",
-    "trivandrum": "thiruvananthapuram",
-    "cochin": "kochi",
-    "baroda": "vadodara",
-    "pondicherry": "puducherry"
+    "bombay":"mumbai","bengaluru":"bangalore","bengluru":"bangalore",
+    "benglore":"bangalore","calcutta":"kolkata","trivandrum":"thiruvananthapuram",
+    "kochi":"cochin","cochin":"kochi","vadodara":"baroda","baroda":"vadodara",
+    "pondicherry":"puducherry","nasik":"nashik","gurgaon":"gurugram",
+    "gurugram":"gurgaon","ahmadabad":"ahmedabad"
 }
 
-def strip_accents(s: str) -> str:
-    return "".join(ch for ch in unicodedata.normalize("NFKD", s) if not unicodedata.combining(ch))
+def strip_accents(s): return ''.join(ch for ch in unicodedata.normalize('NFKD', str(s)) if not unicodedata.combining(ch))
 
-def basic_clean(s: str) -> str:
-    s = strip_accents(str(s or ""))
-    s = s.lower()
-    s = re.sub(r"[()\[\]\{\}\.,\-/_:;#@&']", " ", s)
-    s = re.sub(r"\s+", " ", s).strip()
+def clean_text(s):
+    s = strip_accents(str(s or '')).lower()
+    s = re.sub(r'[^\w\s]', ' ', s)
+    s = re.sub(r'\s+', ' ', s).strip()
     return s
 
-def drop_stop_words(s: str) -> str:
-    toks = [t for t in s.split() if t not in STOP_WORDS and not t.isdigit()]
-    return " ".join(toks).strip()
+def normalize_city(s):
+    s = clean_text(s)
+    toks = [CITY_ALIASES.get(t, t) for t in s.split() if t not in STOP_WORDS]
+    return ' '.join(toks).strip().title()
 
-def normalize_city_like(s: str) -> str:
-    s = basic_clean(s)
-    s = drop_stop_words(s)
-    toks = [CITY_ALIASES.get(t, t) for t in s.split()]
-    return " ".join(toks).strip().title()
-
-def normalize_state_name(state_name, state_to_abbr, abbr_to_state):
-    if state_name is None or (isinstance(state_name, float) and pd.isna(state_name)):
-        return None
-    s = basic_clean(str(state_name)).replace(".", "")
-    s_up = s.upper()
-    if s_up in abbr_to_state:
-        return abbr_to_state[s_up]
-    s_title = s.title()
-    if s_title in state_to_abbr:
-        return s_title
-    return s_title
+def normalize_state(s):
+    if not s: return None
+    return clean_text(str(s)).title()
 
 def extract_pin(txt):
-    if not txt:
-        return None
-    m = re.search(r"(?<!\d)(\d{6})(?!\d)", str(txt))
+    if not txt: return None
+    m = re.search(r'(?<!\d)(\d{6})(?!\d)', str(txt))
     return m.group(1) if m else None
 
-# =========================
-# Scoring
-# =========================
-def score_candidate(addr_clean, city_in_norm, state_in_norm,
-                    cand_city_norm, cand_state_norm, office_norm):
-    """
-    Weights tuned for accuracy:
-      - City:   0.58
-      - State:  0.27
-      - Locality vs address text: 0.15
-    """
-    city_score = sim(cand_city_norm, city_in_norm)
-    state_score = sim(cand_state_norm, state_in_norm)
-    locality_score = sim(office_norm, addr_clean)
-    total = 0.58 * city_score + 0.27 * state_score + 0.15 * locality_score
-    return city_score, state_score, locality_score, total
+# -------------------------------
+# Similarity wrapper
+# -------------------------------
+def sim(a,b): return fuzz.token_set_ratio(a or '', b or '')/100
 
-# =========================
-# Single-record validator
-# =========================
-def validate_record(record, master_by_pin, state_to_abbr, abbr_to_state):
-    # Build Address1 = address1 + address2 + address3
-    addr_raw = " ".join(
-        [str(x) for x in [record.get("address1"), record.get("address2"), record.get("address3")]
-         if x and str(x).lower() != "nan"]
-    ).strip()
-    addr_clean = basic_clean(addr_raw)
+# -------------------------------
+# Validation logic
+# -------------------------------
+def validate_batch(df, master_by_pin, batch_no):
+    results=[]
+    for _,r in tqdm(df.iterrows(), total=len(df), desc=f"Processing batch {batch_no}"):
+        addr_raw=" ".join([str(x) for x in [r.get('address1'),r.get('address2'),r.get('address3')] if x and str(x).lower()!='nan']).strip()
+        addr_clean=clean_text(addr_raw)
+        pin=extract_pin(addr_raw) or extract_pin(r.get('pincode'))
+        city_in=normalize_city(r.get('city'))
+        state_in=normalize_state(r.get('state'))
+        country="India"
 
-    pin = extract_pin(addr_raw) or extract_pin(record.get("pincode"))
-    city_in_norm = normalize_city_like(record.get("city"))
-    state_in_norm = normalize_state_name(record.get("state"), state_to_abbr, abbr_to_state)
+        best=None
+        city_conf=state_conf=loc_conf=0.0
+        pin_match="No"; flag="No"; reason=""; pin_score=0.0
 
-    best_city = city_in_norm
-    best_state = state_in_norm
-    best_loc = None
+        if pin and pin in master_by_pin:
+            dfp=master_by_pin[pin]
+            if 'city_norm' not in dfp.columns:
+                dfp['city_norm']=dfp['city'].apply(normalize_city)
+                dfp['state_norm']=dfp['state'].apply(normalize_state)
+                dfp['office_norm']=dfp['office_name'].apply(normalize_city)
+                master_by_pin[pin]=dfp
 
-    city_conf = state_conf = loc_conf = 0.0
-    total_score = 0.0
-    pin_match = "No"
-    flag = "No"
-    confidence_level = "Low"
-    country_conf = 1.0  # Country fixed India
-    country = COUNTRY_STATIC
+            dfp['city_sim']=dfp['city_norm'].apply(lambda x: sim(x, city_in))
+            dfp['state_sim']=dfp['state_norm'].apply(lambda x: sim(x, state_in))
+            dfp['office_sim']=dfp['office_norm'].apply(lambda x: sim(x, addr_clean))
+            dfp['total_score']=0.58*dfp['city_sim']+0.27*dfp['state_sim']+0.15*dfp['office_sim']
+            best=dfp.sort_values('total_score',ascending=False).iloc[0]
 
-    # === Flow start: PIN route ===
-    if not pin:
-        flag = "Yes"  # no pincode in input
-    else:
-        dfp = master_by_pin.get(pin)
-        if dfp is None or dfp.empty:
-            flag = "Yes"  # 6-digit but not in India DB
-        else:
-            # Ensure normalized columns present once
-            if "city_norm" not in dfp.columns:
-                dfp = dfp.copy()
-                dfp["city_norm"] = dfp["city"].apply(normalize_city_like)
-                dfp["state_norm"] = dfp["state"].apply(
-                    lambda s: normalize_state_name(s, state_to_abbr, abbr_to_state)
-                )
-                dfp["office_norm"] = dfp["office_name"].apply(normalize_city_like)
-                master_by_pin[pin] = dfp  # cache back
+            city_conf=float(best['city_sim']); state_conf=float(best['state_sim'])
+            loc_conf=float(best['office_sim']); pin_score=float(best['total_score'])
 
-            # Score all candidates under this pin
-            best_idx = None
-            best_sc = (-1, -1, -1, -1)
-            for idx, cand in dfp.iterrows():
-                ccs, scs, lcs, tot = score_candidate(
-                    addr_clean, city_in_norm, state_in_norm,
-                    cand["city_norm"], cand["state_norm"], cand["office_norm"]
-                )
-                if tot > best_sc[3]:
-                    best_sc = (ccs, scs, lcs, tot)
-                    best_idx = idx
-
-            if best_idx is not None:
-                best_row = dfp.loc[best_idx]
-                best_city = best_row["city"]
-                best_state = best_row["state"]
-                best_loc = best_row["office_name"]
-                city_conf, state_conf, loc_conf, total_score = best_sc
-
-                # Decide pin_match & flags per flowchart
-                # Ambiguous if same pincode maps to multiple cities
-                ambiguous = (dfp["city"].nunique() > 1)
-
-                # Match thresholds (tuned)
-                city_ok = city_conf >= 0.60 if city_in_norm else True
-                state_ok = state_conf >= 0.60 if state_in_norm else True
-
-                pin_match = "Yes" if (city_ok and state_ok) else "No"
-
-                if ambiguous or not pin_match:
-                    flag = "Yes"
+            # trust PINs inside India DB
+            if pin_score>=0.45 or (city_conf>=CITY_THRESHOLD and state_conf>=STATE_THRESHOLD):
+                pin_match="Yes"
             else:
-                flag = "Yes"
+                flag="Yes"; reason="Low similarity despite valid pin"
+        else:
+            flag="Yes"; reason="Pin not in master_ref or missing"
 
-    # Confidence label from overall score
-    overall = 0.5 * city_conf + 0.3 * state_conf + 0.2 * country_conf
-    if overall >= 0.85:
-        confidence_level = "High"
-    elif overall >= 0.60:
-        confidence_level = "Medium"
-    else:
-        confidence_level = "Low"
+        # dynamic confidence level
+        overall=(0.5*city_conf+0.3*state_conf+0.2*1.0)
+        conf_level="High" if overall>=0.8 else ("Medium" if overall>=0.6 else "Low")
 
-    # If both city & state missing in input, flag (flowchart right side)
-    if not (record.get("city") and record.get("state")):
-        flag = "Yes"
+        results.append({
+            "Address1":addr_raw,
+            "City":city_in,
+            "State":state_in,
+            "Pincode":pin,
+            "Country":country,
+            "Pin_Match":pin_match,
+            "Pin_Match_Score":round(pin_score,3),
+            "City_Confidence":round(city_conf,3),
+            "State_Confidence":round(state_conf,3),
+            "Overall_Confidence":round(overall,3),
+            "Confidence_Level":conf_level,
+            "Flag":flag,
+            "Reason":reason,
+            "Locality":best['office_name'] if best is not None else None
+        })
+    return pd.DataFrame(results)
 
-    return {
-        "Address1": addr_raw,
-        "City": best_city,
-        "State": best_state,
-        "Pincode": pin,
-        "Country": country,
-        "Pin_Match": pin_match,
-        "City_Confidence": round(city_conf, 3),
-        "State_Confidence": round(state_conf, 3),
-        "Country_Confidence": round(country_conf, 3),
-        "Overall_Confidence": round(overall, 3),
-        "Confidence_Level": confidence_level,
-        "Flag": flag,
-        "Locality": best_loc
-    }
-
-# =========================
+# -------------------------------
 # Main
-# =========================
+# -------------------------------
 def main():
-    # --- load abbreviation map ---
-    abbr_path = None
-    for p in ABBR_CSV_CANDIDATES:
-        if os.path.exists(p):
-            abbr_path = p
-            break
-    if abbr_path is None:
-        raise FileNotFoundError("abbreviation_list 1.csv not found. Put it in ./datasets/ or current folder.")
-
-    abbr = pd.read_csv(abbr_path)
-    abbr.columns = abbr.columns.str.strip().str.lower()
-    abbr["state"] = abbr["state"].astype(str).str.strip().str.title()
-    abbr["abbreviation"] = abbr["abbreviation"].astype(str).str.strip().str.upper()
-    state_to_abbr = dict(zip(abbr["state"], abbr["abbreviation"]))
-    abbr_to_state = dict(zip(abbr["abbreviation"], abbr["state"]))
-    print(f"Loaded {len(abbr)} state abbreviations from: {abbr_path}")
-
-    eng = get_db_connection()
-
-    # --- read master & input from DB ---
+    eng=get_db_connection()
     with eng.begin() as con:
-        master = pd.read_sql("SELECT * FROM av.master_ref", con)
-        inp = pd.read_sql("SELECT * FROM av.input_address", con)
+        master=pd.read_sql("SELECT * FROM av.master_ref",con)
+        inp=pd.read_sql("SELECT * FROM av.input_addresses",con)
 
-    # Normalize master (once)
-    master["city"] = master["city"].astype(str).str.strip().str.title()
-    master["state"] = master["state"].astype(str).str.strip().str.title()
-    master["pincode"] = master["pincode"].astype(str).str.extract(r"(\d{6})", expand=False)
+    # group master by PIN for fast lookup
+    master_by_pin={k:v for k,v in master.groupby('pincode')}
+    chunks=[inp[i:i+10000] for i in range(0,len(inp),10000)]
 
-    # Build pincode index
-    master_by_pin = {p: g for p, g in master.groupby("pincode")}
-    print(f"Cached {len(master_by_pin)} unique pincodes from master_ref.")
+    all_parts=[]
+    for i,ch in enumerate(chunks,1):
+        df_part=validate_batch(ch, master_by_pin, i)
+        fname=f"validated_output_part{i}.xlsx"
+        df_part.to_excel(fname,index=False)
+        print(f"✅ Saved {fname}")
 
-    # Prepare output table fresh
-    with eng.begin() as con:
-        con.execute(text("""
-            DROP TABLE IF EXISTS av.validation_result_final;
-            CREATE TABLE av.validation_result_final(
-                address1 TEXT, city TEXT, state TEXT, pincode TEXT, country TEXT,
-                pin_match TEXT,
-                city_confidence NUMERIC, state_confidence NUMERIC, country_confidence NUMERIC,
-                overall_confidence NUMERIC, confidence_level TEXT, flag TEXT, locality TEXT
-            );
-        """))
-
-    total = len(inp)
-    print(f"Starting validation for {total} rows in batches of {BATCH_SIZE}...")
-
-    inserted_total = 0
-    for b, start in enumerate(range(0, total, BATCH_SIZE), start=1):
-        end = min(start + BATCH_SIZE, total)
-        subset = inp.iloc[start:end]
-        results = []
-
-        # row-wise loop (robust; can be parallelized later if needed)
-        for _, rec in subset.iterrows():
-            results.append(
-                validate_record(rec, master_by_pin, state_to_abbr, abbr_to_state)
-            )
-
-        df = pd.DataFrame(results)
-
-        # --- Excel per batch ---
-        xname = f"validated_output_part{b}.xlsx"
-        df.to_excel(xname, index=False)
-        print(f"✅ Saved Excel: {xname}  ({len(df)} rows)")
-
-        # --- DB insert per batch ---
-        df_db = df.fillna("").copy()
-        # keep numeric cols numeric where useful
-        for c in ["city_confidence", "state_confidence", "country_confidence", "overall_confidence"]:
-            df_db[c] = pd.to_numeric(df_db[c], errors="coerce")
-        df_db.columns = df_db.columns.str.lower()
-
-        df_db.to_sql(
-            "validation_result_final", eng, schema="av",
-            if_exists="append", index=False, method="multi", chunksize=1000
-        )
-
-        inserted_total += len(df_db)
-        # live DB count
+        # push each batch into DB
+        df_db=df_part.fillna("").copy()
+        df_db.columns=df_db.columns.str.lower()
         with eng.begin() as con:
-            cnt = con.execute(text("SELECT COUNT(*) FROM av.validation_result_final")).scalar()
-        print(f"✅ Batch {b} inserted to DB. DB now has {cnt} rows.  ({end}/{total})\n")
+            con.execute(text("CREATE TABLE IF NOT EXISTS av.validation_result_final (address1 TEXT, city TEXT, state TEXT, pincode TEXT, country TEXT, pin_match TEXT, pin_match_score NUMERIC, city_confidence NUMERIC, state_confidence NUMERIC, overall_confidence NUMERIC, confidence_level TEXT, flag TEXT, reason TEXT, locality TEXT)"))
+            for _,row in df_db.iterrows():
+                con.execute(text("""
+                    INSERT INTO av.validation_result_final
+                    (address1,city,state,pincode,country,pin_match,pin_match_score,city_confidence,state_confidence,overall_confidence,confidence_level,flag,reason,locality)
+                    VALUES(:a,:c,:s,:p,:co,:pm,:pms,:cc,:sc,:oc,:cl,:f,:r,:l)
+                """),{
+                    "a":row.address1,"c":row.city,"s":row.state,"p":row.pincode,"co":row.country,
+                    "pm":row.pin_match,"pms":row.pin_match_score,"cc":row.city_confidence,"sc":row.state_confidence,
+                    "oc":row.overall_confidence,"cl":row.confidence_level,"f":row.flag,"r":row.reason,"l":row.locality
+                })
 
-    print(f"🎉 Completed. Total rows inserted: {inserted_total} / {total}")
+        all_parts.append(df_part)
 
-if __name__ == "__main__":
+    print("🎯 Validation completed. All results stored in av.validation_result_final and Excel parts.")
+
+if __name__=="__main__":
     main()
