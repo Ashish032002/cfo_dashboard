@@ -1,850 +1,757 @@
 {
-      "transactionSource": "PHYSICAL",
-      "transactionType": "SIP",
-      "id": "a1b2c3d4-e5f6-a1b2-c3d4-e5f6a1b2c3e9",
-      "clientTransactionNumber": "765678",
-      "seqNo": "Knoll niches innovative",
-      "slNo": "AGP technologies networks",
-      "userTransactionNo": "34565",
-      "transactionDate": "2024-01-23T10:00:00+05:30",
-      "startDate": "2024-01-23T10:00:00+05:30",
-      "endDate": "2025-01-23T10:00:00+05:30",
-      "entryDate": "2024-01-23T10:05:00+05:30",
-      "tradeDate": "2024-01-23T10:10:00+05:30",
-      "amount": {
+  "transactionSource": "PHYSICAL",
+  "transactionType": "SIP",
+  "id": "a1b2c3d4-e5f6-a1b2-c3d4-e5f6a1b2c3e9",
+  "clientTransactionNumber": "765678",
+  "seqNo": "SEQ-000401",
+  "slNo": "SL-000987",
+  "userTransactionNo": "34565",
+  "transactionDate": "2024-01-23T10:00:00+05:30",
+  "startDate": "2024-01-23T10:00:00+05:30",
+  "endDate": "2025-01-23T10:00:00+05:30",
+  "entryDate": "2024-01-23T10:05:00+05:30",
+  "tradeDate": "2024-01-23T10:10:00+05:30",
+  "amount": {
+    "amountValue": {
+      "unscaledValue": "10000",
+      "scale": 2
+    },
+    "schemeCurrency": "INR"
+  },
+  "roundUpFlag": "N",
+  "barcodeNumber": 48392015,
+  "applicationNumber": 77441122,
+  "omTransactionFlag": "N",
+  "units": 564.9579960655448,
+  "remarks": "SIP purchase order placed successfully",
+  "lienInvocationFlag": "N",
+  "lienRevocationFlag": "N",
+  "installmentNumber": 1,
+  "instrumentDate": "2024-01-23T10:15:00+05:30",
+  "maturitySwitchOption": true,
+  "packageName": "Retail SIP Package",
+  "payInMinorWhitelistFlag": false,
+  "payOutMinorWhitelistFlag": true,
+  "paperlessFlag": false,
+  "groupOrderId": "6c3a3bde-53d2-4e8a-9c2d-0a2c1de4b3f7",
+  "whatsAppConsentFlag": true,
+  "dealRefNo": "DEAL-REF-20240123-001",
+  "assignedFields": {
+    "defaultBankAccount": false
+  },
+  "sipFromDate": "2024-02-01T00:00:00+05:30",
+  "exchangeDcFlag": "N",
+  "reinvestOption": "REINVEST",
+  "postValidateFlag": "Y",
+  "npoApplicableDate": "2023-04-01T00:00:00+05:30",
+  "npoForm": true,
+  "npoDeclaration": true,
+  "npoRegistrationNumber": "NPO123456",
+  "uboApplicableDate": "2023-04-01T00:00:00+05:30",
+  "uboDeclaration": "DECLARED",
+  "listedAssociate": "N",
+  "stockExchange": "NSE",
+  "uboNames": [
+    "Rakesh Mehta",
+    "Anita Mehta"
+  ],
+  "uboCategories": [
+    "Category A",
+    "Category B"
+  ],
+  "uboPepFlags": [
+    "N",
+    "N"
+  ],
+  "uboPans": [
+    "ABCDE1234F",
+    "PQRSX6789K"
+  ],
+  "firstHolder": {
+    "title": "MR",
+    "name": {
+      "firstName": "Rahul",
+      "middleName": "Kumar",
+      "lastName": "Mehta"
+    },
+    "demography": {
+      "title": "MR",
+      "name": {
+        "firstName": "Rahul",
+        "middleName": "Kumar",
+        "lastName": "Mehta"
+      },
+      "gender": "MALE",
+      "countryCode": "IN",
+      "occupation": "AGRICULTURIST",
+      "grossAnnualIncome": {
         "amountValue": {
-          "unscaledValue": "10000",
-          "scale": 729
+          "unscaledValue": "500000",
+          "scale": 2
         },
         "schemeCurrency": "INR"
       },
-      "roundUpFlag": "Jewelery Guinea-Bissau",
-      "barcodeNumber": "{{ faker.random.ushort }}",
-      "applicationNumber": "{{ faker.random.ushort }}",
-      "omTransactionFlag": "N",
-      "units": 564.9579960655448,
-      "remarks": "Pines paradigm Cambridgeshire",
-      "lienInvocationFlag": "Organic hack Optimized",
-      "lienRevocationFlag": "UAE Dirham invoice",
-      "installmentNumber": 624,
-      "instrumentDate": "2024-01-23T10:15:00+05:30",
-      "maturitySwitchOption": true,
-      "packageName": "Clothing, Home & Toys info-mediaries yellow",
-      "payInMinorWhitelistFlag": false,
-      "payOutMinorWhitelistFlag": true,
-      "paperlessFlag": false,
-      "groupOrderId": "{{ faker.random.uuid }}",
-      "whatsAppConsentFlag": true,
-      "dealRefNo": "SQL Grocery",
-      "assignedFields": {
-        "defaultBankAccount": false
+      "pekrn": "PQRST4321U",
+      "pan": "PQRST4321U",
+      "pekrnCategory": "CATEGORY_B",
+      "panExemptCategory": "NONE",
+      "emails": [
+        "rahul.mehta@example.com",
+        "rahul.alt@example.com"
+      ],
+      "mobileBelongsTo": "SELF",
+      "mobiles": [
+        "8765432109",
+        "8765432108"
+      ],
+      "emailBelongsTo": "SELF",
+      "otpEmail": "rahul.otp@example.com",
+      "otpMobile": "8765432108",
+      "otpSentTo": "MOBILE",
+      "emailRelationship": "Self",
+      "mobileRelationship": "Self",
+      "dobProof": "AADHAAR",
+      "dateOfBirth": "1990-04-12T00:00:00+05:30",
+      "fatfDeclaration": false,
+      "officePhoneNumber": "02233445566",
+      "residentialPhoneNumber": "02012345678",
+      "officeFaxNumber": "02233445567",
+      "residentialFaxNumber": "02012345679",
+      "country": {
+        "citizen": "Indian",
+        "taxResidency1": "INDIA",
+        "taxResidency2": "NONE",
+        "taxResidency3": "NONE"
       },
-      "sipFromDate": "2024-02-01T00:00:00+05:30",
-      "exchangeDcFlag": "ADP Officer payment",
-      "reinvestOption": "pink time-frame",
-      "postValidateFlag": "rich Garden & Movies",
-      "npoApplicableDate": "2023-04-01T00:00:00+05:30",
-      "npoForm": true,
-      "npoDeclaration": true,
-      "npoRegistrationNumber": "{{ faker.random.ushort }}",
-      "uboApplicableDate": "2023-04-01T00:00:00+05:30",
-      "uboDeclaration": "compressing Small Plastic Soap",
-      "listedAssociate": "leverage Steel Michigan",
-      "stockExchange": "Unbranded Metal Shoes",
-      "uboNames": [
-        "applications Practical Rubber Ball Burundi Franc",
-        "Isle of Man models"
-      ],
-      "uboCategories": [
-        "Dynamic fuchsia synergize",
-        "invoice"
-      ],
-      "uboPepFlags": [
-        "invoice Metal",
-        "Trinidad and Tobago sensor scale"
-      ],
-      "uboPans": [
-        "Route Connecticut",
-        "Checking Account"
-      ],
-      "firstHolder": {
-        "title": "MR",
-        "name": {
-          "firstName": "{{ faker.name.first_name }}",
-          "middleName": "focus group North Carolina",
-          "lastName": "{{ faker.name.last_name }}"
+      "nationality": "Indian",
+      "cin": "CIN123"
+    }
+  },
+  "paymentMechanism": "E_MANDATE",
+  "uboDeclarationFlag": "Y",
+  "nomineeFormSignedByPoa": false,
+  "allUnits": true,
+  "poaPanNumber": "AAAAA9999A",
+  "retiredPlanOption": "N",
+  "parentSubFundCode": "SUBFUND-001",
+  "thirdPartyPaymentFlag": false,
+  "instrumentAccountType": "SAVINGS",
+  "kycMandate": "KYC_OK",
+  "bankWhitelistFlag": true,
+  "transactionNature": "PURCHASE",
+  "transactionMode": "ONLINE",
+  "specialProduct": "NONE",
+  "historic": true,
+  "dematPurchaseTransaction": true,
+  "settlementNumber": 554433,
+  "supplementaryFeedFile": false,
+  "creditFlag": "CREDIT_FLAG_N",
+  "allotmentMode": "ALLOTMENT_MODE_P",
+  "futureContext": {
+    "field28": "NA",
+    "field29": "NA",
+    "field30": "NA",
+    "field31": "NA",
+    "field32": "NA",
+    "field33": "NA",
+    "field34": "NA",
+    "field35": "NA",
+    "field36": "NA",
+    "field37": "NA",
+    "field38": "NA",
+    "field39": "NA",
+    "field40": "NA",
+    "field41": "NA",
+    "field42": "NA",
+    "field43": "NA",
+    "field44": "NA",
+    "field45": "NA",
+    "field46": "NA",
+    "field47": "NA",
+    "field48": "NA",
+    "field49": "NA",
+    "field50": "NA",
+    "field51": "NA",
+    "field52": "NA",
+    "field53": "NA",
+    "field54": "NA",
+    "field55": "NA",
+    "field56": "NA",
+    "field57": "NA",
+    "field58": "NA",
+    "field59": "NA",
+    "field60": "NA",
+    "field61": "NA",
+    "field62": "NA",
+    "field63": "NA",
+    "field64": "NA",
+    "field65": "NA",
+    "field66": "NA",
+    "field67": "NA",
+    "field68": "NA",
+    "field69": "NA",
+    "field70": "NA",
+    "field71": "NA",
+    "field72": "NA",
+    "field73": "NA",
+    "field74": "NA",
+    "field75": "NA"
+  },
+  "instrumentBank": {
+    "name": "HDFC Bank",
+    "holderName": "Rahul Kumar Mehta",
+    "accountNumber": "012345678901",
+    "accountType": "SAVINGS",
+    "isDefaultBank": true,
+    "branch": "Viman Nagar",
+    "ifscCode": "HDFC0001234",
+    "neftIfscCode": "HDFC0001234",
+    "rtgsIfscCode": "HDFC0001234",
+    "micr": "411240002",
+    "address": {
+      "line1": "123, Parent Street",
+      "line2": "Viman Nagar",
+      "line3": "Near Phoenix Mall",
+      "city": "Pune",
+      "state": "Maharashtra",
+      "country": "India",
+      "pinCode": 411014
+    },
+    "multiBank": true,
+    "bankCode": "HDFC"
+  },
+  "goalId": "2d1dbd44-6c74-49af-99ef-9b0c2c7b49d1",
+  "goalTargetScheme": "RETIREMENT",
+  "goalTriggerValue": 844,
+  "goalTargetValue": 700,
+  "goalRetirementAge": 60,
+  "subSourceProgram": "MOBILE_APP",
+  "minorFlag": false,
+  "redeemDividendFlag": "N",
+  "securityISIN": "INF000000001",
+  "listedCompanyName": "Sample Asset Management Co.",
+  "approvalDate": "2024-01-22T18:30:00+05:30",
+  "transactionAmount": "528.00",
+  "lienUnits": "658.00",
+  "redemptionOtpFlag": "N",
+  "dbCrType": "DR",
+  "isMultiCartRequest": true,
+  "subTransactionType": "SIP_PURCHASE",
+  "investor": {
+    "folioNo": "FOLIO124",
+    "userCode": "USR000123",
+    "identificationNumber": "55667788",
+    "demography": {
+      "title": "MS",
+      "name": {
+        "firstName": "Priya",
+        "middleName": "A",
+        "lastName": "Sharma"
+      },
+      "gender": "FEMALE",
+      "countryCode": "IN",
+      "occupation": "SERVICE",
+      "pekrn": "PEKRN12345",
+      "pan": "ABCDE1234F",
+      "pekrnCategory": "CATEGORY_A",
+      "panExemptCategory": "NONE",
+      "email": "priya.sharma@example.com",
+      "mobileBelongsTo": "SELF",
+      "mobile": "9876543210",
+      "emailBelongsTo": "SELF",
+      "otpEmail": "priya.otp@example.com",
+      "otpMobile": "9876543210",
+      "otpSentTo": "MOBILE",
+      "emailRelationship": "Self",
+      "mobileRelationship": "Self",
+      "dobProof": "PAN",
+      "fatfDeclaration": false,
+      "officePhoneNumber": "02240000000",
+      "residentialPhoneNumber": "02040000000",
+      "officeFaxNumber": "02240000001",
+      "residentialFaxNumber": "02040000001",
+      "country": {
+        "citizen": "Indian",
+        "taxResidency1": "INDIA",
+        "taxResidency2": "NONE",
+        "taxResidency3": "NONE"
+      },
+      "nationality": "Indian"
+    },
+    "validPan": true,
+    "dpId": "d6c1b8e4-8d3b-4d62-9f8f-58a8a3e0b90c",
+    "taxStatus": "RESIDENT_INDIVIDUAL",
+    "ckycNo": "CKYC1234567890",
+    "kycStatus": "ACTIVE",
+    "isPep": true,
+    "nriDeclarationFlag": false,
+    "holdingMode": "SI",
+    "source": "ONLINE",
+    "eNominationType": "Online",
+    "eNomDocId": "b2d0b1c8-b4b9-4f6a-88f3-4f9fb0a9c1a2",
+    "eSignFlag": true,
+    "nominee": false,
+    "guardian": {
+      "relation": "FATHER",
+      "pan": "AAAAA1111A",
+      "address": {
+        "line1": "45, Lake View Road",
+        "line2": "Koregaon Park",
+        "line3": "",
+        "city": "Pune",
+        "state": "Maharashtra",
+        "country": "India",
+        "pinCode": 411001
+      }
+    },
+    "bank": {
+      "name": "ICICI Bank",
+      "holderName": "Priya A Sharma",
+      "accountNumber": "998877665544",
+      "accountType": "NRI_NON_REPAT",
+      "isDefaultBank": true,
+      "branch": "Camp",
+      "ifscCode": "ICIC0000456",
+      "neftIfscCode": "ICIC0000456",
+      "rtgsIfscCode": "ICIC0000456",
+      "micr": "411229003",
+      "address": {
+        "line1": "10, MG Road",
+        "line2": "Camp",
+        "line3": "",
+        "city": "Pune",
+        "state": "Maharashtra",
+        "country": "India",
+        "pinCode": 411001
+      },
+      "multiBank": true,
+      "bankCode": "ICICI"
+    },
+    "payOutMode": "PAYMENT_TYPE_DIRECT_TRANSFER",
+    "sipBank": {
+      "name": "HDFC Bank",
+      "holderName": "Priya A Sharma",
+      "accountNumber": "112233445566",
+      "accountType": "SAVINGS",
+      "isDefaultBank": true,
+      "branch": "Viman Nagar",
+      "ifscCode": "HDFC0001234",
+      "neftIfscCode": "HDFC0001234",
+      "rtgsIfscCode": "HDFC0001234",
+      "micr": "411240002",
+      "address": {
+        "line1": "123, Parent Street",
+        "line2": "Viman Nagar",
+        "line3": "",
+        "city": "Pune",
+        "state": "Maharashtra",
+        "country": "India",
+        "pinCode": 411014
+      },
+      "multiBank": false,
+      "bankCode": "HDFC"
+    },
+    "address": [
+      {
+        "line1": "123, Parent Street",
+        "line2": "Viman Nagar",
+        "line3": "",
+        "city": "Pune",
+        "state": "Maharashtra",
+        "country": "India",
+        "pinCode": 411014
+      }
+    ],
+    "overseasAddress": [
+      {
+        "line1": "221B Baker Street",
+        "line2": "Marylebone",
+        "line3": "",
+        "city": "London",
+        "state": "London",
+        "country": "United Kingdom",
+        "pinCode": 700001
+      }
+    ],
+    "fatcas": [
+      {
+        "fatcaId": "8f6d4d5c-8b6e-4a2a-9a87-0b8f8fb31c01",
+        "aadhaarNumber": "123412341234",
+        "fatherName": {
+          "firstName": "Anil",
+          "middleName": "",
+          "lastName": "Sharma"
         },
-      "demography":{
-        "title": "MR",
-        "name": {
-          "firstName": "Rahul",
-          "middleName": "Kumar",
+        "spouseName": {
+          "firstName": "Nikhil",
+          "middleName": "",
+          "lastName": "Sharma"
+        },
+        "placeOfBirth": "Pune",
+        "countryOfBirth": "India",
+        "addressType": "RO",
+        "hasTaxResidencyOutsideIndia": false,
+        "taxResidency": [],
+        "annualIncomeSlab": "ABOVE_5_LAKH_BELOW_10_LAKH",
+        "sourceOfWealth": "SALARY",
+        "sourceOfFunds": "SAVINGS",
+        "pep": false,
+        "declaration": "DECLARED",
+        "corporateServices": "NONE",
+        "occupation": "PRIVATE_SECTOR_SERVICE"
+      },
+      {
+        "fatcaId": "4c2e2b1a-2a1b-4a9c-8bcd-77aa11bb22cc",
+        "aadhaarNumber": "567856785678",
+        "fatherName": {
+          "firstName": "Mahesh",
+          "middleName": "",
           "lastName": "Mehta"
         },
-        "gender": "MALE",
-        "countryCode": "IN",
-        "occupation": "AGRICULTURIST",
-        "grossAnnualIncome": {
-          "amountValue": {
-            "unscaledValue": "500000",
-            "scale": 2
-          },
-          "schemeCurrency": "INR"
+        "spouseName": {
+          "firstName": "N/A",
+          "middleName": "",
+          "lastName": "N/A"
         },
-        "pekrn": "PQRST4321U",
-        "pan": "PQRST4321U",
-        "pekrnCategory": "Category B",
-        "panExemptCategory": "Exempt Category C",
-        "emails": ["rahul.mehta@example.com", "bob.brown@example.com"],
-        "mobileBelongsTo": "GD",
-        "mobiles": ["8765432109", "8765432108"],
-        "emailBelongsTo": "PM",
-        "otpEmail": "rahul.otp@example.com",
-        "otpMobile": "8765432108",
-        "otpSentTo": "MOBILE",
-        "emailRelationship": "Self",
-        "mobileRelationship": "Self",
-        "dobProof": "Aadhaar Card",
-        "dateOfBirth" : "1990-04-12T00:00:00+05:30",
-        "fatfDeclaration": false,
-        "officePhoneNumber": "2233445566",
-        "residentialPhoneNumber": "8765432109",
-        "officeFaxNumber": "2233445567",
-        "residentialFaxNumber": "8765432108",
-        "country": {
-          "citizen": "Indian",
-          "taxResidency1": "USA",
-          "taxResidency2": "UK",
-          "taxResidency3": "Canada"
-        },
-        "nationality": "Indian",
-        "cin": "CIN123"
+        "placeOfBirth": "Mumbai",
+        "countryOfBirth": "India",
+        "addressType": "RO",
+        "hasTaxResidencyOutsideIndia": true,
+        "taxResidency": [
+          {
+            "country": "USA",
+            "taxId": "US-TIN-998877",
+            "tinReason": "TIN_AVAILABLE",
+            "tinRemarks": "Provided by investor",
+            "countryTax": "US"
+          }
+        ],
+        "annualIncomeSlab": "ABOVE_ONE_CRORE",
+        "sourceOfWealth": "RENTAL_INCOME",
+        "sourceOfFunds": "BANK_TRANSFER",
+        "pep": true,
+        "declaration": "DECLARED",
+        "corporateServices": "NONE",
+        "occupation": "PRIVATE_SECTOR_SERVICE"
+      }
+    ],
+    "additionalHolders": [
+      {
+        "id": "d4c3b2a1-1111-4f2d-9fcb-2d2d2d2d2d2d",
+        "pan": "BBBPB2345Q",
+        "isValidPan": true,
+        "pekrnCategory": "CATEGORY_A",
+        "kycStatus": "ACTIVE",
+        "consentReceived": true,
+        "mfdConsentStatus": false,
+        "cKycNo": "CKYC000111222"
       },
-
-
-        "gender": "FEMALE",
-        "countryCode": "{{ faker.address.country_code }}",
-        "occupation": "GOVERNMENT_SERVICE",
-        "pekrn": "RAM digital Automotive, Garden & Tools",
-        "pan": "Engineer Stravenue",
-        "pekrnCategory": "Wyoming",
-        "panExemptCategory": "Program Small",
-        "email": "{{ faker.internet.example_email }}",
-        "mobileBelongsTo": "CD",
-        "mobile": "heuristic background Pound Sterling",
-        "emailBelongsTo": "SP",
-        "otpEmail": "Tools & Grocery Group sensor",
-        "otpMobile": "next generation invoice",
-        "otpSentTo": "sexy",
-        "emailRelationship": "bluetooth",
-        "mobileRelationship": "front-end",
-        "dobProof": "online Cliff",
-        "fatfDeclaration": false,
-        "officePhoneNumber": "{{ faker.random.ushort }}",
-        "residentialPhoneNumber": "{{ faker.random.ushort }}",
-        "officeFaxNumber": "{{ faker.random.ushort }}",
-        "residentialFaxNumber": "{{ faker.random.ushort }}",
-        "country": {
-          "citizen": "Park Forward optical",
-          "taxResidency1": "Organic Tasty Concrete Cheese dot-com",
-          "taxResidency2": "Rubber",
-          "taxResidency3": "National 24/7 South Dakota"
-        },
-        "nationality": "Mexican Peso"
-      },
-      "paymentMechanism": "Customer Handmade",
-      "uboDeclarationFlag": "Implemented open-source Refined",
-      "nomineeFormSignedByPoa": false,
-      "allUnits": true,
-      "poaPanNumber": "{{ faker.random.ushort }}",
-      "retiredPlanOption": "JBOD Consultant Rubber",
-      "parentSubFundCode": "Berkshire extranet intermediate",
-      "thirdPartyPaymentFlag": false,
-      "instrumentAccountType": "Applications Auto Loan Account transmitting",
-      "kycMandate": "quantify Bedfordshire",
-      "bankWhitelistFlag": true,
-      "transactionNature": "Credit Card Account Home Loan Account Ergonomic Rubber Tuna",
-      "transactionMode": "matrix Viaduct bus",
-      "specialProduct": "multi-byte",
-      "historic": true,
-      "dematPurchaseTransaction": true,
-      "settlementNumber": "{{ faker.random.ushort }}",
-      "supplementaryFeedFile": false,
-      "creditFlag": "CREDIT_FLAG_N",
-      "allotmentMode": "ALLOTMENT_MODE_P",
-      "futureContext": {
-        "field28": "GB Awesome Rubber Towels",
-        "field29": "Strategist secondary Small Steel Bacon",
-        "field30": "input Home Loan Account",
-        "field31": "bluetooth",
-        "field32": "metrics",
-        "field33": "Enhanced British Indian Ocean Territory (Chagos Archipelago)",
-        "field34": "aggregate bi-directional Iceland",
-        "field35": "payment Customer Money Market Account",
-        "field36": "Bedfordshire",
-        "field37": "Massachusetts Union",
-        "field38": "Senior",
-        "field39": "Cotton Pound Sterling",
-        "field40": "web services Mill",
-        "field41": "Oval Intranet Associate",
-        "field42": "Buckinghamshire",
-        "field43": "SDD customized Lock",
-        "field44": "model Accountability protocol",
-        "field45": "function navigating",
-        "field46": "Greens",
-        "field47": "stable",
-        "field48": "connect Lake",
-        "field49": "Music",
-        "field50": "Regional Communications Communications",
-        "field51": "port",
-        "field52": "Investment Account Shoes, Garden & Clothing",
-        "field53": "Expanded",
-        "field54": "Sleek Wooden Hat primary",
-        "field55": "Central",
-        "field56": "support Awesome",
-        "field57": "reboot",
-        "field58": "Borders",
-        "field59": "Iceland Handcrafted",
-        "field60": "Maine adapter mobile",
-        "field61": "Intelligent Wooden Ball Home Loan Account",
-        "field62": "Roads Unbranded Wooden Computer Soft",
-        "field63": "parse New York",
-        "field64": "local methodologies",
-        "field65": "Buckinghamshire task-force",
-        "field66": "Gorgeous Fresh Shirt systemic Corporate",
-        "field67": "Phased Tools & Industrial Customizable",
-        "field68": "supply-chains Kroon",
-        "field69": "Freeway",
-        "field70": "1080p Dynamic",
-        "field71": "matrix",
-        "field72": "firewall",
-        "field73": "innovate incubate",
-        "field74": "Avon IB productize",
-        "field75": "interface"
-      },
-      "instrumentBank": {
-        "name": "{{ faker.name.last_name }}",
-        "holderName": "Specialist Crest generating",
-        "accountNumber": "{{ faker.random.ushort }}",
-        "accountType": "ACCOUNT_TYPE_UNSPECIFIED",
-        "isDefaultBank": true,
-        "branch": "portal Customer upward-trending",
-        "ifscCode": "Corner blue",
-        "neftIfscCode": "Licensed Plastic Shoes",
-        "rtgsIfscCode": "Investment Account backing up Gorgeous",
-        "micr": "Cambridgeshire",
-        "address": {
-          "line1": "Personal Loan Account interactive productize",
-          "line2": "systematic bottom-line SDD",
-          "line3": "mission-critical Corporate withdrawal",
-          "city": "{{ faker.address.city }}",
-          "state": "{{ faker.address.state }}",
-          "country": "{{ faker.address.country }}",
-          "pinCode": 63
-        },
-        "multiBank": true,
-        "bankCode": "Practical Concrete Keyboard Delaware West Virginia"
-      },
-      "goalId": "{{ faker.random.uuid }}",
-      "goalTargetScheme": "Ergonomic JSON",
-      "goalTriggerValue": 844,
-      "goalTargetValue": 700,
-      "goalRetirementAge": 818,
-      "subSourceProgram": "Baby, Movies & Shoes Metrics Pre-emptive",
-      "minorFlag": false,
-      "redeemDividendFlag": "protocol e-enable",
-      "securityISIN": "Rhode Island",
-      "listedCompanyName": "virtual system-worthy Ergonomic",
-      "approvalDate": "2024-01-22T18:30:00+05:30",
-      "transactionAmount": "528",
-      "lienUnits": "658",
-      "redemptionOtpFlag": "superstructure Architect",
-      "dbCrType": "Beauty & Outdoors Rustic Concrete Computer Buckinghamshire",
-      "isMultiCartRequest": true,
-      "subTransactionType": "Branding Internal deposit",
-
-    "investor": {
-      "folioNo": "FOLIO124",
-      "userCode": "orchestrate Associate",
-      "identificationNumber": "{{ faker.random.ushort }}",
-      "demography": {
-        "title": "MS",
-        "name": {
-          "firstName": "{{ faker.name.first_name }}",
-          "middleName": "Borders neural",
-          "lastName": "{{ faker.name.last_name }}"
-        },
-        "gender": "FEMALE",
-        "countryCode": "{{ faker.address.country_code }}",
-        "occupation": "SERVICE",
-        "pekrn": "auxiliary",
-        "pan": "synergies pixel streamline",
-        "pekrnCategory": "bypass",
-        "panExemptCategory": "solutions SDD",
-        "email": "{{ faker.internet.example_email }}",
-        "mobileBelongsTo": "SE",
-        "mobile": "system model",
-        "emailBelongsTo": "DP",
-        "otpEmail": "Supervisor card",
-        "otpMobile": "Central Ergonomic Profound",
-        "otpSentTo": "Wyoming payment Berkshire",
-        "emailRelationship": "indexing Money Market Account",
-        "mobileRelationship": "payment empowering",
-        "dobProof": "Armenia",
-        "fatfDeclaration": false,
-        "officePhoneNumber": "{{ faker.random.ushort }}",
-        "residentialPhoneNumber": "{{ faker.random.ushort }}",
-        "officeFaxNumber": "{{ faker.random.ushort }}",
-        "residentialFaxNumber": "{{ faker.random.ushort }}",
-        "country": {
-          "citizen": "Ford",
-          "taxResidency1": "Netherlands Antillian Guilder parsing",
-          "taxResidency2": "TCP",
-          "taxResidency3": "Practical Small Cotton Table"
-        },
-        "nationality": "Iceland Delaware payment"
-      },
-      "validPan": true,
-      "dpId": "{{ faker.random.uuid }}",
-      "taxStatus": "TAX_STATUS_UNSPECIFIED",
-      "ckycNo": "bypass",
-      "kycStatus": "INACTIVE",
-      "isPep": true,
-      "nriDeclarationFlag": false,
-      "holdingMode": "SI",
-      "source": "generate",
-      "eNominationType": "Online",
-      "eNomDocId": "{{ faker.random.uuid }}",
-      "eSignFlag": true,
-      "nominee": false,
-      "guardian": {
+      {
+        "id": "aabbccdd-2222-4b3c-8d7e-3e3e3e3e3e3e",
+        "pan": "CCCCD3456R",
+        "isValidPan": false,
+        "pekrnCategory": "CATEGORY_B",
+        "kycStatus": "KYC_STATUS_UNSPECIFIED",
+        "consentReceived": true,
+        "mfdConsentStatus": false,
+        "cKycNo": "CKYC000333444"
+      }
+    ],
+    "nominees": [
+      {
+        "nomineeId": 840,
+        "pan": "DDDDD4567S",
+        "percent": 50.0,
         "relation": "FATHER",
-        "pan": "partnerships contingency virtual",
         "address": {
-          "line1": "revolutionize",
-          "line2": "Wyoming Albania",
-          "line3": "deposit wireless",
-          "city": "{{ faker.address.city }}",
-          "state": "{{ faker.address.state }}",
-          "country": "{{ faker.address.country }}",
-          "pinCode": 60
-        }
-      },
-      "bank": {
-        "name": "{{ faker.name.last_name }}",
-        "holderName": "dedicated",
-        "accountNumber": "{{ faker.random.ushort }}",
-        "accountType": "NRI_NON_REPAT",
-        "isDefaultBank": true,
-        "branch": "engage",
-        "ifscCode": "South Carolina Trail Granite",
-        "neftIfscCode": "Customer SMTP",
-        "rtgsIfscCode": "Handcrafted Ireland bypass",
-        "micr": "even-keeled seize",
-        "address": {
-          "line1": "Refined Sports & Electronics",
-          "line2": "e-business Configuration",
-          "line3": "Generic experiences",
-          "city": "{{ faker.address.city }}",
-          "state": "{{ faker.address.state }}",
-          "country": "{{ faker.address.country }}",
-          "pinCode": 732
-        },
-        "multiBank": true,
-        "bankCode": "Investment Account Practical"
-      },
-      "payOutMode": "PAYMENT_TYPE_DIRECT_TRANSFER",
-      "sipBank": {
-        "name": "{{ faker.name.last_name }}",
-        "holderName": "sky blue Soft Islands",
-        "accountNumber": "{{ faker.random.ushort }}",
-        "accountType": "ACCOUNT_TYPE_UNSPECIFIED",
-        "isDefaultBank": true,
-        "branch": "Australia",
-        "ifscCode": "calculate TCP Minnesota",
-        "neftIfscCode": "Cliff navigating French Southern Territories",
-        "rtgsIfscCode": "Maryland",
-        "micr": "Moroccan Dirham Dynamic",
-        "address": {
-          "line1": "Intuitive Buckinghamshire Saudi Arabia",
-          "line2": "bluetooth",
-          "line3": "Officer",
-          "city": "{{ faker.address.city }}",
-          "state": "{{ faker.address.state }}",
-          "country": "{{ faker.address.country }}",
-          "pinCode": 483
-        },
-        "multiBank": false,
-        "bankCode": "Practical Steel Ball Shoal"
-      },
-      "address": [
-        {
-          "line1": "123, Parent Street",
-          "line2": "Viman Nagar",
+          "line1": "12, Green Park",
+          "line2": "Aundh",
           "line3": "",
           "city": "Pune",
           "state": "Maharashtra",
           "country": "India",
-          "pinCode": 411014
-        }
-      ],
-      "overseasAddress": [
-        {
-          "line1": "123, Parent Street",
-          "line2": "Viman Nagar",
+          "pinCode": 411007
+        },
+        "eNomEmailStatus": true,
+        "eNomMobileStatus": true,
+        "nomineeInSoa": false,
+        "addressSameAsFh": true,
+        "docName": "AADHAAR",
+        "docValue": "123412341234",
+        "minor": false
+      },
+      {
+        "nomineeId": 118,
+        "pan": "EEEEE5678T",
+        "percent": 50.0,
+        "relation": "MOTHER",
+        "address": {
+          "line1": "12, Green Park",
+          "line2": "Aundh",
           "line3": "",
           "city": "Pune",
           "state": "Maharashtra",
           "country": "India",
-          "pinCode": 411014
-        }
-      ],
-      "fatcas": [
-        {
-          "fatcaId": "{{ faker.random.uuid }}",
-          "aadhaarNumber": "{{ faker.random.ushort }}",
-          "fatherName": {
-            "firstName": "{{ faker.name.first_name }}",
-            "middleName": "contextually-based",
-            "lastName": "{{ faker.name.last_name }}"
-          },
-          "spouseName": {
-            "firstName": "{{ faker.name.first_name }}",
-            "middleName": "whiteboard indexing",
-            "lastName": "{{ faker.name.last_name }}"
-          },
-          "placeOfBirth": "Seychelles process improvement",
-          "countryOfBirth": "Beauty & Automotive Bedfordshire Identity",
-          "addressType": "RO",
-          "hasTaxResidencyOutsideIndia": false,
-          "taxResidency": [
-            {
-              "country": "{{ faker.address.country }}",
-              "taxId": "{{ faker.random.uuid }}",
-              "tinReason": "Orchestrator Lane Gorgeous Steel Fish",
-              "tinRemarks": "deposit open architecture withdrawal",
-              "countryTax": "Gorgeous niches back-end"
-            },
-            {
-              "country": "{{ faker.address.country }}",
-              "taxId": "{{ faker.random.uuid }}",
-              "tinReason": "Tools, Computers & Beauty Hill",
-              "tinRemarks": "Azerbaijanian Manat Intelligent",
-              "countryTax": "Music Myanmar Granite"
-            }
-          ],
-          "annualIncomeSlab": "BELOW_1_LAKH",
-          "sourceOfWealth": "GIFT",
-          "sourceOfFunds": "Buckinghamshire distributed Orchestrator",
-          "pep": true,
-          "declaration": "withdrawal RAM",
-          "corporateServices": "Orchestrator",
-          "occupation": "STUDENT"
+          "pinCode": 411007
         },
-        {
-          "fatcaId": "{{ faker.random.uuid }}",
-          "aadhaarNumber": "{{ faker.random.ushort }}",
-          "fatherName": {
-            "firstName": "{{ faker.name.first_name }}",
-            "middleName": "mint green New Zealand Credit Card Account",
-            "lastName": "{{ faker.name.last_name }}"
-          },
-          "spouseName": {
-            "firstName": "{{ faker.name.first_name }}",
-            "middleName": "Spring New Jersey Cedi",
-            "lastName": "{{ faker.name.last_name }}"
-          },
-          "placeOfBirth": "Squares",
-          "countryOfBirth": "Refined Rustic background",
-          "addressType": "RO",
-          "hasTaxResidencyOutsideIndia": true,
-          "taxResidency": [
-            {
-              "country": "{{ faker.address.country }}",
-              "taxId": "{{ faker.random.uuid }}",
-              "tinReason": "Licensed Plastic Table virtual",
-              "tinRemarks": "Liaison aggregate",
-              "countryTax": "SDR"
-            },
-            {
-              "country": "{{ faker.address.country }}",
-              "taxId": "{{ faker.random.uuid }}",
-              "tinReason": "deploy",
-              "tinRemarks": "Fantastic Granite Pizza",
-              "countryTax": "Ergonomic"
-            }
-          ],
-          "annualIncomeSlab": "ABOVE_ONE_CRORE",
-          "sourceOfWealth": "RENTAL_INCOME",
-          "sourceOfFunds": "mint green",
-          "pep": true,
-          "declaration": "plum Fresh",
-          "corporateServices": "Home Loan Account",
-          "occupation": "PRIVATE_SECTOR_SERVICE"
-        }
-      ],
-      "additionalHolders": [
-        {
-          "id": "{{ faker.random.uuid }}",
-          "pan": "Home Frozen Consultant",
-          "isValidPan": true,
-          "pekrnCategory": "Venezuela View",
-          "kycStatus": "WAITING_FOR_PREVIOUS",
-          "consentReceived": true,
-          "mfdConsentStatus": false,
-          "cKycNo": "cross-media"
-        },
-        {
-          "id": "{{ faker.random.uuid }}",
-          "pan": "card Tools & Electronics",
-          "isValidPan": false,
-          "pekrnCategory": "reintermediate",
-          "kycStatus": "KYC_STATUS_UNSPECIFIED",
-          "consentReceived": true,
-          "mfdConsentStatus": false,
-          "cKycNo": "Incredible Fresh Bacon"
-        }
-      ],
-      "nominees": [
-        {
-          "nomineeId": 840,
-          "pan": "generating Metrics",
-          "percent": 193.94187544236928,
-          "relation": "FATHER",
-          "address": {
-            "line1": "Home Loan Account driver Phased",
-            "line2": "generate",
-            "line3": "Small",
-            "city": "{{ faker.address.city }}",
-            "state": "{{ faker.address.state }}",
-            "country": "{{ faker.address.country }}",
-            "pinCode": 546
-          },
-          "eNomEmailStatus": true,
-          "eNomMobileStatus": true,
-          "nomineeInSoa": false,
-          "addressSameAsFh": true,
-          "docName": "AADHAR",
-          "docValue": "FOUR",
-          "minor": false
-        },
-        {
-          "nomineeId": 118,
-          "pan": "Gorgeous Rubber Pizza Intelligent Granite Soap",
-          "percent": 656.6092568470438,
-          "relation": "FATHER",
-          "address": {
-            "line1": "internet solution",
-            "line2": "Cayman Islands Fords",
-            "line3": "Generic Concrete Pizza",
-            "city": "{{ faker.address.city }}",
-            "state": "{{ faker.address.state }}",
-            "country": "{{ faker.address.country }}",
-            "pinCode": 16
-          },
-          "eNomEmailStatus": true,
-          "eNomMobileStatus": true,
-          "nomineeInSoa": false,
-          "addressSameAsFh": true,
-          "docName": "AADHAR",
-          "docValue": "TEN",
-          "minor": true
-        }
-      ],
-      "jointHolders": [
-        {
-          "jhId": "{{ faker.random.uuid }}",
-          "relation": "FATHER",
-          "pan": "Gorgeous Rubber Shoes modular",
-          "address": {
-            "line1": "back-end",
-            "line2": "Wall",
-            "line3": "panel",
-            "city": "{{ faker.address.city }}",
-            "state": "{{ faker.address.state }}",
-            "country": "{{ faker.address.country }}",
-            "pinCode": 2
-          },
-          "fatca": [
-            {
-              "fatcaId": "{{ faker.random.uuid }}",
-              "aadhaarNumber": "{{ faker.random.ushort }}",
-              "fatherName": {
-                "firstName": "{{ faker.name.first_name }}",
-                "middleName": "contextually-based",
-                "lastName": "{{ faker.name.last_name }}"
-              },
-              "spouseName": {
-                "firstName": "{{ faker.name.first_name }}",
-                "middleName": "whiteboard indexing",
-                "lastName": "{{ faker.name.last_name }}"
-              },
-              "placeOfBirth": "Seychelles process improvement",
-              "countryOfBirth": "Beauty & Automotive Bedfordshire Identity",
-              "addressType": "RO",
-              "hasTaxResidencyOutsideIndia": false,
-              "taxResidency": [
-                {
-                  "country": "{{ faker.address.country }}",
-                  "taxId": "{{ faker.random.uuid }}",
-                  "tinReason": "Orchestrator Lane Gorgeous Steel Fish",
-                  "tinRemarks": "deposit open architecture withdrawal",
-                  "countryTax": "Gorgeous niches back-end"
-                },
-                {
-                  "country": "{{ faker.address.country }}",
-                  "taxId": "{{ faker.random.uuid }}",
-                  "tinReason": "Tools, Computers & Beauty Hill",
-                  "tinRemarks": "Azerbaijanian Manat Intelligent",
-                  "countryTax": "Music Myanmar Granite"
-                }
-              ],
-              "annualIncomeSlab": "BELOW_1_LAKH",
-              "sourceOfWealth": "GIFT",
-              "sourceOfFunds": "Buckinghamshire distributed Orchestrator",
-              "pep": true,
-              "declaration": "withdrawal RAM",
-              "corporateServices": "Orchestrator",
-              "occupation": "STUDENT"
-            }
-          ],
-          "pekrnCategory": "Coves Crossing Buckinghamshire",
-          "isValidPan": false,
-          "kycStatus": "INVALID_VALIDATION_REQUEST",
-          "consentReceived": false,
-          "idName": "Managed Licensed connect",
-          "cKycNo": "sky blue program CFP Franc"
-        },
-        {
-          "jhId": "{{ faker.random.uuid }}",
-          "relation": "FATHER",
-          "pan": "Concrete",
-          "address": {
-            "line1": "Seamless",
-            "line2": "Ergonomic extensible",
-            "line3": "Awesome Clothing Vermont",
-            "city": "{{ faker.address.city }}",
-            "state": "{{ faker.address.state }}",
-            "country": "{{ faker.address.country }}",
-            "pinCode": 534
-          },
-          "fatca": [
-            {
-              "fatcaId": "{{ faker.random.uuid }}",
-              "aadhaarNumber": "{{ faker.random.ushort }}",
-              "fatherName": {
-                "firstName": "{{ faker.name.first_name }}",
-                "middleName": "contextually-based",
-                "lastName": "{{ faker.name.last_name }}"
-              },
-              "spouseName": {
-                "firstName": "{{ faker.name.first_name }}",
-                "middleName": "whiteboard indexing",
-                "lastName": "{{ faker.name.last_name }}"
-              },
-              "placeOfBirth": "Seychelles process improvement",
-              "countryOfBirth": "Beauty & Automotive Bedfordshire Identity",
-              "addressType": "RO",
-              "hasTaxResidencyOutsideIndia": false,
-              "taxResidency": [
-                {
-                  "country": "{{ faker.address.country }}",
-                  "taxId": "{{ faker.random.uuid }}",
-                  "tinReason": "Orchestrator Lane Gorgeous Steel Fish",
-                  "tinRemarks": "deposit open architecture withdrawal",
-                  "countryTax": "Gorgeous niches back-end"
-                },
-                {
-                  "country": "{{ faker.address.country }}",
-                  "taxId": "{{ faker.random.uuid }}",
-                  "tinReason": "Tools, Computers & Beauty Hill",
-                  "tinRemarks": "Azerbaijanian Manat Intelligent",
-                  "countryTax": "Music Myanmar Granite"
-                }
-              ],
-              "annualIncomeSlab": "BELOW_1_LAKH",
-              "sourceOfWealth": "GIFT",
-              "sourceOfFunds": "Buckinghamshire distributed Orchestrator",
-              "pep": true,
-              "declaration": "withdrawal RAM",
-              "corporateServices": "Orchestrator",
-              "occupation": "STUDENT"
-            }
-          ],
-          "pekrnCategory": "programming compress array",
-          "isValidPan": true,
-          "kycStatus": "YET_TO_VERIFY",
-          "consentReceived": true,
-          "idName": "Lebanese Pound Ergonomic Metal Table",
-          "cKycNo": "lavender"
-        }
-      ],
-      "onlineMandate": {
-        "omUmrn": "Maryland North Korean Won",
-        "mandateRefId": "{{ faker.random.uuid }}",
-        "debitType": "M",
-        "otmType": "CAMS_OTM",
-        "docName": "AADHAR",
-        "docValue": "FIFTY",
-        "untilCancelledFlag": false,
-        "otmMobile": "expedite auxiliary ADP",
-        "otmEmail": "Refined"
-      },
-      "repatriationFlag": "Small Soft Computer District Crescent",
-      "panExemptCategory": true,
-      "gstNumber": "{{ faker.random.ushort }}",
-      "leiNumber": "{{ faker.random.ushort }}",
-      "can": "interfaces sexy",
-      "lienUnits": "654345",
-      "poa": {
+        "eNomEmailStatus": true,
+        "eNomMobileStatus": true,
+        "nomineeInSoa": false,
+        "addressSameAsFh": true,
+        "docName": "AADHAAR",
+        "docValue": "567856785678",
+        "minor": true
+      }
+    ],
+    "jointHolders": [
+      {
+        "jhId": "0f0e0d0c-3333-4a4a-9b9b-aaaaaaaaaaaa",
         "relation": "FATHER",
-        "pan": "Centralized",
+        "pan": "FFFFF6789U",
         "address": {
-          "line1": "Knolls 4th generation Metrics",
-          "line2": "Connecticut rich",
-          "line3": "Vietnam",
-          "city": "{{ faker.address.city }}",
-          "state": "{{ faker.address.state }}",
-          "country": "{{ faker.address.country }}",
-          "pinCode": 792
+          "line1": "78, River Road",
+          "line2": "Kalyani Nagar",
+          "line3": "",
+          "city": "Pune",
+          "state": "Maharashtra",
+          "country": "India",
+          "pinCode": 411006
         },
         "fatca": [
           {
-            "fatcaId": "{{ faker.random.uuid }}",
-            "aadhaarNumber": "{{ faker.random.ushort }}",
+            "fatcaId": "11112222-3333-4444-5555-666677778888",
+            "aadhaarNumber": "111122223333",
             "fatherName": {
-              "firstName": "{{ faker.name.first_name }}",
-              "middleName": "contextually-based",
-              "lastName": "{{ faker.name.last_name }}"
+              "firstName": "Ramesh",
+              "middleName": "",
+              "lastName": "Mehta"
             },
             "spouseName": {
-              "firstName": "{{ faker.name.first_name }}",
-              "middleName": "whiteboard indexing",
-              "lastName": "{{ faker.name.last_name }}"
+              "firstName": "Sita",
+              "middleName": "",
+              "lastName": "Mehta"
             },
-            "placeOfBirth": "Seychelles process improvement",
-            "countryOfBirth": "Beauty & Automotive Bedfordshire Identity",
+            "placeOfBirth": "Pune",
+            "countryOfBirth": "India",
             "addressType": "RO",
             "hasTaxResidencyOutsideIndia": false,
-            "taxResidency": [
-              {
-                "country": "{{ faker.address.country }}",
-                "taxId": "{{ faker.random.uuid }}",
-                "tinReason": "Orchestrator Lane Gorgeous Steel Fish",
-                "tinRemarks": "deposit open architecture withdrawal",
-                "countryTax": "Gorgeous niches back-end"
-              },
-              {
-                "country": "{{ faker.address.country }}",
-                "taxId": "{{ faker.random.uuid }}",
-                "tinReason": "Tools, Computers & Beauty Hill",
-                "tinRemarks": "Azerbaijanian Manat Intelligent",
-                "countryTax": "Music Myanmar Granite"
-              }
-            ],
-            "annualIncomeSlab": "BELOW_1_LAKH",
-            "sourceOfWealth": "GIFT",
-            "sourceOfFunds": "Buckinghamshire distributed Orchestrator",
-            "pep": true,
-            "declaration": "withdrawal RAM",
-            "corporateServices": "Orchestrator",
-            "occupation": "STUDENT"
+            "taxResidency": [],
+            "annualIncomeSlab": "ABOVE_10_LAKH_BELOW_25_LAKH",
+            "sourceOfWealth": "BUSINESS",
+            "sourceOfFunds": "BANK_TRANSFER",
+            "pep": false,
+            "declaration": "DECLARED",
+            "corporateServices": "NONE",
+            "occupation": "BUSINESS"
           }
         ],
-        "pekrnCategory": "scale Sao Tome and Principe purple",
+        "pekrnCategory": "CATEGORY_A",
         "isValidPan": false,
-        "kycStatus": "KYC_STATUS_UNSPECIFIED",
-        "consentReceived": false
+        "kycStatus": "INVALID_VALIDATION_REQUEST",
+        "consentReceived": false,
+        "idName": "Ramesh Mehta",
+        "cKycNo": "CKYC999888777"
       },
-      "consentReceived": true,
-      "swpa": "SAS Keys",
-      "boosterSip": "Personal Loan Account Refined Granite Tuna",
-      "frequency": "OM",
-      "fircStatus": "Buckinghamshire",
-      "guardianType": "bypassing Tactics deliver",
-      "nriSourceOfFunds": "application feed Causeway",
-      "fatcaCompliant": true,
-      "usCanadaDeclaration": false,
-      "primaryMobileNumberRelation": "Virtual",
-      "thirdPartyPayment": "Administrator Auto Loan Account Cook Islands",
-      "selfFamilyFlag": "CD",
-      "healthStatus": false,
-      "aofReferenceNumber": "{{ faker.random.ushort }}",
-      "eLogNumber": "{{ faker.random.ushort }}"
-    },
-    "amc": {
-      "amcCode": "index Handmade Rubber Car Lead",
-      "depositBankAccountNumber": "{{ faker.random.ushort }}",
-      "uboEffectiveDate": "payment applications",
-      "personalIdNumber": "{{ faker.random.ushort }}",
-      "transactionNature": "gold",
-      "milestoneTargetAmount": {
-        "amountValue": {
-          "unscaledValue": "10000",
-          "scale": 979
+      {
+        "jhId": "abcd1234-4444-4f4f-8c8c-bbbbbbbbbbbb",
+        "relation": "SPOUSE",
+        "pan": "GGGGG7890V",
+        "address": {
+          "line1": "78, River Road",
+          "line2": "Kalyani Nagar",
+          "line3": "",
+          "city": "Pune",
+          "state": "Maharashtra",
+          "country": "India",
+          "pinCode": 411006
         },
-        "schemeCurrency": "INR"
-      },
-      "milestoneTenure": 180,
-      "checkDigitNumber": "{{ faker.random.ushort }}"
-    },
-    "scheme": {
-      "schemeCode": "Profit-focused",
-      "reInvest": "PAYOUT",
-      "fromLsin": "users Optimization Home Loan Account",
-      "toLsin": "Health, Outdoors & Grocery blue",
-      "autoSwp": "parse",
-      "autoSwitchOption": "panel Fresh"
-    },
-    "broker": {
-      "brokerCode": "Technician Investment Account",
-      "subBrokerArn": "cutting-edge",
-      "riaCode": "application innovate",
-      "euin": "virtual Gateway",
-      "hasEuinDeclaration": true,
-      "brokerDealerCode": "International Refined",
-      "locationCode": "290"
-    },
-    "payInMode": {
-      "payInRefNo": "Flat Automotive, Shoes & Electronics Director",
-      "instNo": 628,
-      "payInBankName": "Qatari Rial solution-oriented",
-      "payInBankAccNo": "empower GB",
-      "tpvFlag": false,
-      "payInBankAccType": "Savings Account Ergonomic real-time",
-      "payInMode": "ivory"
-    },
-    "transactionSupplementary": [
-      {
-        "fileName": "{{ faker.system.file_name }}",
-        "fileExtension": "navigating",
-        "fileContent": "cutting-edge compressing"
-      },
-      {
-        "fileName": "{{ faker.system.file_name }}",
-        "fileExtension": "Sports & Toys",
-        "fileContent": "Guadeloupe withdrawal withdrawal"
+        "fatca": [
+          {
+            "fatcaId": "99990000-8888-7777-6666-555544443333",
+            "aadhaarNumber": "444455556666",
+            "fatherName": {
+              "firstName": "Suresh",
+              "middleName": "",
+              "lastName": "Sharma"
+            },
+            "spouseName": {
+              "firstName": "Rahul",
+              "middleName": "Kumar",
+              "lastName": "Mehta"
+            },
+            "placeOfBirth": "Mumbai",
+            "countryOfBirth": "India",
+            "addressType": "RO",
+            "hasTaxResidencyOutsideIndia": false,
+            "taxResidency": [],
+            "annualIncomeSlab": "ABOVE_5_LAKH_BELOW_10_LAKH",
+            "sourceOfWealth": "SALARY",
+            "sourceOfFunds": "SAVINGS",
+            "pep": false,
+            "declaration": "DECLARED",
+            "corporateServices": "NONE",
+            "occupation": "PRIVATE_SECTOR_SERVICE"
+          }
+        ],
+        "pekrnCategory": "CATEGORY_A",
+        "isValidPan": true,
+        "kycStatus": "YET_TO_VERIFY",
+        "consentReceived": true,
+        "idName": "Ananya Mehta",
+        "cKycNo": "CKYC123123123"
       }
     ],
-    "purchaseOtpFlag": true,
-    "omTransactionSip": true,
+    "onlineMandate": {
+      "omUmrn": "UMRN000012345678",
+      "mandateRefId": "5f1b2f54-7f3d-4ed6-8b31-1d5d1d0d9b0a",
+      "debitType": "M",
+      "otmType": "CAMS_OTM",
+      "docName": "AADHAAR",
+      "docValue": "123412341234",
+      "untilCancelledFlag": false,
+      "otmMobile": "9876543210",
+      "otmEmail": "priya.sharma@example.com"
+    },
+    "repatriationFlag": "N",
+    "panExemptCategory": false,
+    "gstNumber": "27ABCDE1234F1Z5",
+    "leiNumber": "LEI000000000000000001",
+    "can": "CAN123456",
+    "lienUnits": "654345",
+    "poa": {
+      "relation": "FATHER",
+      "pan": "HHHHH8901W",
+      "address": {
+        "line1": "90, Hill Road",
+        "line2": "Baner",
+        "line3": "",
+        "city": "Pune",
+        "state": "Maharashtra",
+        "country": "India",
+        "pinCode": 411045
+      },
+      "fatca": [
+        {
+          "fatcaId": "1a2b3c4d-5555-4a6b-8c7d-8e9f0a1b2c3d",
+          "aadhaarNumber": "777788889999",
+          "fatherName": {
+            "firstName": "Vijay",
+            "middleName": "",
+            "lastName": "Mehta"
+          },
+          "spouseName": {
+            "firstName": "N/A",
+            "middleName": "",
+            "lastName": "N/A"
+          },
+          "placeOfBirth": "Pune",
+          "countryOfBirth": "India",
+          "addressType": "RO",
+          "hasTaxResidencyOutsideIndia": false,
+          "taxResidency": [],
+          "annualIncomeSlab": "ABOVE_10_LAKH_BELOW_25_LAKH",
+          "sourceOfWealth": "BUSINESS",
+          "sourceOfFunds": "BANK_TRANSFER",
+          "pep": false,
+          "declaration": "DECLARED",
+          "corporateServices": "NONE",
+          "occupation": "BUSINESS"
+        }
+      ],
+      "pekrnCategory": "CATEGORY_A",
+      "isValidPan": false,
+      "kycStatus": "KYC_STATUS_UNSPECIFIED",
+      "consentReceived": false
+    },
+    "consentReceived": true,
+    "swpa": "SAS_KEYS_ENABLED",
+    "boosterSip": "N",
     "frequency": "OM",
-    "noOfInstallments": 512,
-    "sipType": "REGULAR",
-    "minSipTat": 297,
-    "maxSipTat": 917,
-    "topUpData": {
-      "isSipTopUpEnabled": false,
-      "topUpType": "TOP_UP_NONE",
-      "topUpFrequency": "H",
-      "topUpPercentage": 310.6345126252674,
-      "topUpCapYear": "User-centric application"
+    "fircStatus": "NA",
+    "guardianType": "N",
+    "nriSourceOfFunds": "NA",
+    "fatcaCompliant": true,
+    "usCanadaDeclaration": false,
+    "primaryMobileNumberRelation": "SELF",
+    "thirdPartyPayment": "N",
+    "selfFamilyFlag": "SELF",
+    "healthStatus": false,
+    "aofReferenceNumber": "AOF12345678",
+    "eLogNumber": "ELOG98765432"
+  },
+  "amc": {
+    "amcCode": "AMC001",
+    "depositBankAccountNumber": "000111222333",
+    "uboEffectiveDate": "2023-04-01",
+    "personalIdNumber": "PID123456",
+    "transactionNature": "PURCHASE",
+    "milestoneTargetAmount": {
+      "amountValue": {
+        "unscaledValue": "10000",
+        "scale": 2
+      },
+      "schemeCurrency": "INR"
     },
-    "isAutoSwpEnabled": false,
-    "fresh": false,
-    "systematic": {
-      "installmentNumber": "{{ faker.random.ushort }}"
+    "milestoneTenure": 180,
+    "checkDigitNumber": 7
+  },
+  "scheme": {
+    "schemeCode": "SCH001",
+    "reInvest": "PAYOUT",
+    "fromLsin": "LSIN001",
+    "toLsin": "LSIN002",
+    "autoSwp": "N",
+    "autoSwitchOption": "N"
+  },
+  "broker": {
+    "brokerCode": "BRK001",
+    "subBrokerArn": "ARN-123456",
+    "riaCode": "RIA001",
+    "euin": "E123456",
+    "hasEuinDeclaration": true,
+    "brokerDealerCode": "BD001",
+    "locationCode": "290"
+  },
+  "payInMode": {
+    "payInRefNo": "PAYIN-20240123-0001",
+    "instNo": 628,
+    "payInBankName": "HDFC Bank",
+    "payInBankAccNo": "012345678901",
+    "tpvFlag": false,
+    "payInBankAccType": "SAVINGS",
+    "payInMode": "NETBANKING"
+  },
+  "transactionSupplementary": [
+    {
+      "fileName": "sip_form.pdf",
+      "fileExtension": "pdf",
+      "fileContent": "BASE64_ENCODED_CONTENT_PLACEHOLDER"
     },
-    "sipPeriodDay": "Unbranded",
-    "freedomSipTag": false
-  }
+    {
+      "fileName": "kyc_proof.jpg",
+      "fileExtension": "jpg",
+      "fileContent": "BASE64_ENCODED_CONTENT_PLACEHOLDER"
+    }
+  ],
+  "purchaseOtpFlag": true,
+  "omTransactionSip": true,
+  "frequency": "OM",
+  "noOfInstallments": 12,
+  "sipType": "REGULAR",
+  "minSipTat": 2,
+  "maxSipTat": 7,
+  "topUpData": {
+    "isSipTopUpEnabled": false,
+    "topUpType": "TOP_UP_NONE",
+    "topUpFrequency": "NA",
+    "topUpPercentage": 0.0,
+    "topUpCapYear": "NA"
+  },
+  "isAutoSwpEnabled": false,
+  "fresh": false,
+  "systematic": {
+    "installmentNumber": 1
+  },
+  "sipPeriodDay": "01",
+  "freedomSipTag": false
+}
