@@ -1,36 +1,13 @@
-package com.cams.core.rulesui.config;
+package com.cams.core.rulesui.scm.cache;
 
-import com.cams.core.rulesui.scm.ScmClient;
-import com.cams.core.rulesui.scm.cache.InMemoryScmCache;
-import com.cams.core.rulesui.scm.cache.ScmCache;
-import com.cams.core.rulesui.scm.dto.ScmFile;
-import com.cams.core.rulesui.scm.gitlab.GitlabScmClient;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.reactive.function.client.WebClient;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
-@Configuration
-@EnableConfigurationProperties(ScmProperties.class)
-public class AppConfig {
+public class InMemoryScmCache<V> implements ScmCache<V> {
+    private final ConcurrentHashMap<String, V> map = new ConcurrentHashMap<>();
 
-    @Bean
-    public WebClient scmWebClient(ScmProperties props) {
-        return WebClient.builder()
-            .baseUrl(props.getBaseUrl())
-            .build();
-    }
-
-    @Bean
-    public ScmClient scmClient(ScmProperties props, WebClient scmWebClient) {
-        return switch (props.getProvider()) {
-            case GITLAB -> new GitlabScmClient(scmWebClient);
-            case GITHUB -> throw new UnsupportedOperationException("GitHub client not implemented yet");
-        };
-    }
-
-    @Bean
-    public ScmCache<ScmFile> scmFileCache() {
-        return new InMemoryScmCache<>();
-    }
+    @Override public Optional<V> get(String key) { return Optional.ofNullable(map.get(key)); }
+    @Override public void put(String key, V value) { map.put(key, value); }
+    @Override public void evict(String key) { map.remove(key); }
+    @Override public void clear() { map.clear(); }
 }
