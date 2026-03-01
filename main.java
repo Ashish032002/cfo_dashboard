@@ -1,38 +1,36 @@
 package com.cams.core.rulesui.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import com.cams.core.rulesui.scm.ScmClient;
+import com.cams.core.rulesui.scm.cache.InMemoryScmCache;
+import com.cams.core.rulesui.scm.cache.ScmCache;
+import com.cams.core.rulesui.scm.dto.ScmFile;
+import com.cams.core.rulesui.scm.gitlab.GitlabScmClient;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.reactive.function.client.WebClient;
 
-@ConfigurationProperties(prefix = "scm")
-public class ScmProperties {
+@Configuration
+@EnableConfigurationProperties(ScmProperties.class)
+public class AppConfig {
 
-    public enum Provider { GITLAB, GITHUB }
+    @Bean
+    public WebClient scmWebClient(ScmProperties props) {
+        return WebClient.builder()
+            .baseUrl(props.getBaseUrl())
+            .build();
+    }
 
-    private Provider provider = Provider.GITLAB;
+    @Bean
+    public ScmClient scmClient(ScmProperties props, WebClient scmWebClient) {
+        return switch (props.getProvider()) {
+            case GITLAB -> new GitlabScmClient(scmWebClient);
+            case GITHUB -> throw new UnsupportedOperationException("GitHub client not implemented yet");
+        };
+    }
 
-    /** e.g. https://gitlab.company.com */
-    private String baseUrl;
-
-    /** e.g. group/subgroup/repo-core-backend OR numeric project id */
-    private String project;
-
-    /** e.g. internal_develop */
-    private String defaultBranch = "internal_develop";
-
-    /** e.g. order-acceptance-service/src/main/resources/working-payload */
-    private String drlBasePath;
-
-    public Provider getProvider() { return provider; }
-    public void setProvider(Provider provider) { this.provider = provider; }
-
-    public String getBaseUrl() { return baseUrl; }
-    public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
-
-    public String getProject() { return project; }
-    public void setProject(String project) { this.project = project; }
-
-    public String getDefaultBranch() { return defaultBranch; }
-    public void setDefaultBranch(String defaultBranch) { this.defaultBranch = defaultBranch; }
-
-    public String getDrlBasePath() { return drlBasePath; }
-    public void setDrlBasePath(String drlBasePath) { this.drlBasePath = drlBasePath; }
+    @Bean
+    public ScmCache<ScmFile> scmFileCache() {
+        return new InMemoryScmCache<>();
+    }
 }
